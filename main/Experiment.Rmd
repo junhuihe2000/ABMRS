@@ -13,3 +13,17 @@ knitr::opts_chunk$set(echo = TRUE)
 library(devtools)
 ```
 
+```{Rcpp}
+// [[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+
+// [[Rcpp::export(testcpp)]]
+void testcpp() {
+ double a = std::min(0.0,2.0);
+  cout << a << endl;
+}
+```
+

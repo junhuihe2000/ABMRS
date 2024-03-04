@@ -2,4 +2,5 @@
 
 import(RcppEigen)
 importFrom(Rcpp,evalCpp)
+importFrom(splines,bs)
 useDynLib(EBARS, .registration = TRUE)
