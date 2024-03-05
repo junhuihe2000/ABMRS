@@ -2,7 +2,6 @@
 #include <RcppEigen.h>
 
 #include <algorithm>
-#include <iostream>
 
 #include "ebars.h"
 
@@ -151,16 +150,16 @@ void EBARS::rjmcmc(int burns, int steps, bool flush, int gap) {
   for(int i=0;i<burns+steps;i++) {
     if(flush) {
       if(i%gap==0) {
-        std::cout << "Step " << i << ", RSS = " << (std::pow(sigma,2)*m) << "\n";
-        std::cout << k << " knots: " << xi.transpose() << std::endl;
+        Rcpp::Rcout << "Step " << i << ", RSS = " << (std::pow(sigma,2)*m) << "\n";
+        Rcpp::Rcout << k << " knots: " << xi.transpose() << "\n";
       }
     }
     _update();
   }
 
   if(flush) {
-    std::cout << "Step " << (burns+steps) << ", RSS = " << (std::pow(sigma,2)*m) << "\n";
-    std::cout << k << " knots: " << xi.transpose() << std::endl;
+    Rcpp::Rcout << "Step " << (burns+steps) << ", RSS = " << (std::pow(sigma,2)*m) << "\n";
+    Rcpp::Rcout << k << " knots: " << xi.transpose() << "\n";
   }
 }
 
@@ -192,6 +191,5 @@ RCPP_MODULE(class_EBARS) {
 }
 
 RCPP_EXPOSED_CLASS(EBARS)
-
 
 

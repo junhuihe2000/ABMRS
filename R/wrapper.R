@@ -1,6 +1,9 @@
 # wrappers for exposed Rcpp classes
 
-#' create an instance of EBARS, see `ClassEBARS` for more details about EBARS
+#' create an instance of EBARS
+#' @description
+#' see [ClassEBARS] for more details about class EBARS
+#'
 #'
 #' @param x a numeric vector, indicates the predictor values.
 #' @param y a numeric vector, indicates the response values, the same length as x.
@@ -22,10 +25,10 @@
 #' m = 200
 #'
 #' # generate train data set
-#' x = c(0,sort(runif(m_train, 0, 1))[c(-1,-m)],1)
+#' x = c(0,sort(runif(m, 0, 1))[c(-1,-m)],1)
 #' B = ns(x,knots=knot,intercept=TRUE,Boundary.knots=c(0,1))
 #' y = B%*%beta
-#' y_h = y + rnorm(m_train,0,0.05)
+#' y_h = y + rnorm(m,0,0.05)
 #'
 #' # run EBARS
 #' a = ebars(x,y_h,c=0.3,times = 2)

@@ -8,7 +8,7 @@
 
 //' @name ClassEBARS
 //' @title extended Bayesian adaptive regression spline
-//' @description a class of `ebars`
+//' @description a class of [ebars()]
 //'
 //' @field new constructor, see `ebars`
 //' @field rjmcmc reversible jump MCMC, a wrapper is `mcmc`

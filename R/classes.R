@@ -1,4 +1,4 @@
-EBARS <- setRcppClass("EBARS")
+EBARS <- Rcpp::setRcppClass("EBARS")
 
 
 

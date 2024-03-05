@@ -24,8 +24,9 @@ using namespace std;
 
 // [[Rcpp::export(testcpp)]]
 void testcpp() {
-  Eigen::VectorXd a = Eigen::VectorXd::Zero(3);
-  cout << a.transpose() << endl;
+  Rcpp::Rcout << 5 << "haha" << endl;
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(3);
+  Rcpp::Rcout << v.transpose() << endl;
 }
 ```
 
@@ -52,14 +53,6 @@ y_new = predict(B,x_new)%*%beta
 ggplot() + geom_point(aes(x,y_h))
 ```
 
-```{r}
-exposeClass("EBARS",
-            constructors = list(c("Eigen::VectorXd", "Eigen::VectorXd", 
-                                  "double", "double", "int", "int")),
-            fields = c(),
-            methods = c("rjmcmc", "predict"),
-            header = '#include "ebars.h"')
-```
 
 ```{r}
 time_start = Sys.time()

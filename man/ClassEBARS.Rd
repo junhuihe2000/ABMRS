@@ -4,7 +4,7 @@
 \alias{ClassEBARS}
 \title{extended Bayesian adaptive regression spline}
 \description{
-a class of \code{ebars}
+a class of \code{\link[=ebars]{ebars()}}
 }
 \section{Fields}{
 

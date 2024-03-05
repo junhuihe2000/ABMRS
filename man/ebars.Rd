@@ -2,7 +2,7 @@
 % Please edit documentation in R/wrapper.R
 \name{ebars}
 \alias{ebars}
-\title{create an instance of EBARS, see \code{ClassEBARS} for more details about EBARS}
+\title{create an instance of EBARS}
 \usage{
 ebars(x, y, gamma = 1, c = 0.3, times = 2, n = -1)
 }
@@ -26,7 +26,7 @@ In this case, the number is \code{length(x) * times}, default value is \code{2}.
 an exposed R class of cpp class called EBARS.
 }
 \description{
-create an instance of EBARS, see \code{ClassEBARS} for more details about EBARS
+see \link{ClassEBARS} for more details about class EBARS
 }
 \examples{
 library(EBARS)
@@ -37,10 +37,10 @@ beta = matrix(c(2,-5,5,2,-3,-1,2),ncol=1)
 m = 200
 
 # generate train data set
-x = c(0,sort(runif(m_train, 0, 1))[c(-1,-m)],1)
+x = c(0,sort(runif(m, 0, 1))[c(-1,-m)],1)
 B = ns(x,knots=knot,intercept=TRUE,Boundary.knots=c(0,1))
 y = B\%*\%beta
-y_h = y + rnorm(m_train,0,0.05)
+y_h = y + rnorm(m,0,0.05)
 
 # run EBARS
 a = ebars(x,y_h,c=0.3,times = 2)
