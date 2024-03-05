@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(devtools)
+library(splines)
+library(ggplot2)
 ```
 
 ```{Rcpp}
@@ -22,8 +24,58 @@ using namespace std;
 
 // [[Rcpp::export(testcpp)]]
 void testcpp() {
- double a = std::min(0.0,2.0);
-  cout << a << endl;
+  Eigen::VectorXd a = Eigen::VectorXd::Zero(3);
+  cout << a.transpose() << endl;
 }
 ```
+
+```{r}
+set.seed(1234)
+knot = c(0.4,0.4,0.4,0.4,0.7)
+beta = matrix(c(2,-5,5,2,-3,-1,2),ncol=1)
+m_train = 200; m_test = 50
+```
+
+```{r}
+# generate train data set
+x = c(0,sort(runif(m_train, 0, 1))[c(-1,-m_train)],1)
+B = ns(x,knots=knot,intercept=TRUE,Boundary.knots=c(0,1))
+y = B%*%beta
+y_h = y + rnorm(m_train,0,0.05)
+
+# generate test data set
+x_new = runif(m_test,0,1)
+y_new = predict(B,x_new)%*%beta
+```
+
+```{r}
+ggplot() + geom_point(aes(x,y_h))
+```
+
+```{r}
+exposeClass("EBARS",
+            constructors = list(c("Eigen::VectorXd", "Eigen::VectorXd", 
+                                  "double", "double", "int", "int")),
+            fields = c(),
+            methods = c("rjmcmc", "predict"),
+            header = '#include "ebars.h"')
+```
+
+```{r}
+time_start = Sys.time()
+a = ebars(x,y_h)
+a$mcmc()
+time_end = Sys.time()
+print(time_end-time_start)
+```
+
+
+```{r}
+y_pred = a$predict(x_new)
+```
+
+```{r}
+ggplot() + geom_point(aes(x_new,y_pred),color="red")
+```
+
 

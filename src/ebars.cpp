@@ -2,28 +2,29 @@
 #include <RcppEigen.h>
 
 #include <algorithm>
+#include <iostream>
 
 #include "ebars.h"
 
 double EBARS::_birth() {
-  double p = c * std::min(1.0, std::pow((n-k)/(k+1), 1-gamma));
+  double p = c * std::min(1.0, std::pow((n-k)/(k+1.0), 1.0-gamma));
   return p;
 }
 
 double EBARS::_death() {
-  double p = c * std::min(1.0, std::pow(k/(n-k+1), 1-gamma));
+  double p = c * std::min(1.0, std::pow(k/(n-k+1.0), 1.0-gamma));
   return p;
 }
 
 double EBARS::_relocate() {
-  double p = 1 - _birth() - _death();
+  double p = 1.0 - _birth() - _death();
   return p;
 }
 
 void EBARS::_knots() {
   knots = Eigen::VectorXd::Zero(n);
-  double step = 1/(n-1);
-  knots(0) = 0;
+  double step = 1.0/(n+1);
+  knots(0) = step;
   for(int i=1;i<n;i++) {
     knots(i) = knots(i-1) + step;
   }
@@ -42,13 +43,13 @@ EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
   }
 
   // transform x to t
-  double xmin = x.minCoeff(); double xmax = x.maxCoeff();
+  xmin = x.minCoeff(); xmax = x.maxCoeff();
   t = (x.array()-xmin)/(xmax-xmin);
 
   _knots();
   _initial();
   // maximum likelihood estimation
-  Rcpp::List pars = spline_regression(x, y, xi);
+  Rcpp::List pars = spline_regression(t, y, xi);
   beta = Rcpp::as<Eigen::VectorXd>(pars["beta"]);
   sigma = pars["sigma"];
 }
@@ -72,11 +73,11 @@ void EBARS::_initial() {
   }
 }
 
-void EBARS::_update() {
+bool EBARS::_jump() {
   double type = Rcpp::runif(1, 0.0, 1.0)[0];
   double birth = _birth();
   double death = _death();
-  if(k==1) {death = 0;}
+  if(k==1) {death = 0.0;}
 
   Eigen::VectorXd xi_new, remain_new;
   int k_new;
@@ -116,7 +117,7 @@ void EBARS::_update() {
   }
 
   // compute MLE
-  Rcpp::List pars_new = spline_regression(x,y,xi_new);
+  Rcpp::List pars_new = spline_regression(t,y,xi_new);
   Eigen::VectorXd beta_new = Rcpp::as<Eigen::VectorXd>(pars_new["beta"]);
   double sigma_new = pars_new["sigma"];
 
@@ -131,17 +132,65 @@ void EBARS::_update() {
   if(acc < acc_prob) {
     k = k_new; xi = xi_new; remain_knots = remain_new;
     beta = beta_new; sigma = sigma_new;
+    return true;
+  } else {
+    return false;
   }
 }
 
-void EBARS::rjmcmc(int burns, int steps) {
-  for(int i=0;i<burns;i++) {
-    _update();
-  }
-  for(int i=0;i<steps;i++) {
-    _update();
+void EBARS::_update() {
+  while(true) {
+    bool state = _jump();
+    if(state) {
+      break;
+    }
   }
 }
+
+void EBARS::rjmcmc(int burns, int steps, bool flush, int gap) {
+  for(int i=0;i<burns+steps;i++) {
+    if(flush) {
+      if(i%gap==0) {
+        std::cout << "Step " << i << ", RSS = " << (std::pow(sigma,2)*m) << "\n";
+        std::cout << k << " knots: " << xi.transpose() << std::endl;
+      }
+    }
+    _update();
+  }
+
+  if(flush) {
+    std::cout << "Step " << (burns+steps) << ", RSS = " << (std::pow(sigma,2)*m) << "\n";
+    std::cout << k << " knots: " << xi.transpose() << std::endl;
+  }
+}
+
+Eigen::VectorXd EBARS::predict(const Eigen::VectorXd & x_new) {
+  // transform x_new to t_new
+  Eigen::VectorXd t_new = (x_new.array()-xmin)/(xmax-xmin);
+  // predict
+  Eigen::VectorXd y_new = spline_predict(t_new, xi, beta);
+  return y_new;
+}
+
+Eigen::VectorXd EBARS::get_knots() {
+  return xi;
+}
+
+
+RCPP_MODULE(class_EBARS) {
+  using namespace Rcpp;
+
+  class_<EBARS>("EBARS")
+
+  .constructor<Eigen::VectorXd,Eigen::VectorXd,double,double,int,int>()
+
+
+  .method("rjmcmc", &EBARS::rjmcmc)
+  .method("predict", &EBARS::predict)
+  .method("knots", &EBARS::get_knots)
+  ;
+}
+
 
 
 

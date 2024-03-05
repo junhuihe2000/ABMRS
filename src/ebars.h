@@ -35,13 +35,17 @@ private:
   void _knots(); // create equally-spaced knot locations
   void _initial(); // initialize
 
+  bool _jump(); // one possible jump, may be rejected
   void _update(); // one step movement in RJMCMC
 
 public:
   // initialize EBARS
   EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
         double _gamma = 0.5, double _c = 0.4, int _times = 3, int _n = -1);
-  void rjmcmc(int burns = 200, int steps = 200); // reversible jump MCMC
+  void rjmcmc(int burns = 200, int steps = 200, bool flush = false, int gap = 10); // reversible jump MCMC
+  // predict response values on x_new
+  Eigen::VectorXd predict(const Eigen::VectorXd & x_new);
+  Eigen::VectorXd get_knots();
 };
 
 #endif

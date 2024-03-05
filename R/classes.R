@@ -1,0 +1,1 @@
+EBARS <- setRcppClass("EBARS")
