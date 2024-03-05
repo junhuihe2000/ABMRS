@@ -185,13 +185,13 @@ RCPP_MODULE(class_EBARS) {
   .constructor<Eigen::VectorXd,Eigen::VectorXd,double,double,int,int>()
 
 
-  .method("rjmcmc", &EBARS::rjmcmc)
-  .method("predict", &EBARS::predict)
-  .method("knots", &EBARS::get_knots)
+  .method("rjmcmc", &EBARS::rjmcmc, "reversible jump MCMC")
+  .method("predict", &EBARS::predict, "predict by spline regression with EBARS")
+  .method("knots", &EBARS::get_knots, "return estimated knots")
   ;
 }
 
-
+RCPP_EXPOSED_CLASS(EBARS)
 
 
 

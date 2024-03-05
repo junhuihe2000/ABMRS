@@ -1,6 +1,6 @@
 # wrappers for exposed Rcpp classes
 
-#' create an instance of EBARS
+#' create an instance of EBARS, see `ClassEBARS` for more details about EBARS
 #'
 #' @param x a numeric vector, indicates the predictor values.
 #' @param y a numeric vector, indicates the response values, the same length as x.
@@ -11,10 +11,11 @@
 #' @param times int, decides the number of all potential knots if `n<0`.
 #' In this case, the number is `length(x) * times`, default value is `2`.
 #' @param n int, the number of all potential knots, default value is `-1`.
-#' @returns An exposed R class of cpp class called EBARS.
+#' @returns an exposed R class of cpp class called EBARS.
 #' @export
 #' @examples
 #' library(EBARS)
+#' library(splines)
 #' set.seed(1234)
 #' knot = c(0.4,0.4,0.4,0.4,0.7)
 #' beta = matrix(c(2,-5,5,2,-3,-1,2),ncol=1)

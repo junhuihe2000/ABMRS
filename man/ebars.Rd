@@ -2,7 +2,7 @@
 % Please edit documentation in R/wrapper.R
 \name{ebars}
 \alias{ebars}
-\title{create an instance of EBARS}
+\title{create an instance of EBARS, see \code{ClassEBARS} for more details about EBARS}
 \usage{
 ebars(x, y, gamma = 1, c = 0.3, times = 2, n = -1)
 }
@@ -23,13 +23,14 @@ In this case, the number is \code{length(x) * times}, default value is \code{2}.
 \item{n}{int, the number of all potential knots, default value is \code{-1}.}
 }
 \value{
-An exposed R class of cpp class called EBARS.
+an exposed R class of cpp class called EBARS.
 }
 \description{
-create an instance of EBARS
+create an instance of EBARS, see \code{ClassEBARS} for more details about EBARS
 }
 \examples{
 library(EBARS)
+library(splines)
 set.seed(1234)
 knot = c(0.4,0.4,0.4,0.4,0.7)
 beta = matrix(c(2,-5,5,2,-3,-1,2),ncol=1)
