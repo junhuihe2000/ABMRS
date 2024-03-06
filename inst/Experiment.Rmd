@@ -24,11 +24,19 @@ using namespace std;
 
 // [[Rcpp::export(testcpp)]]
 void testcpp() {
-  Rcpp::Rcout << 5 << "haha" << endl;
-  Eigen::VectorXd v = Eigen::VectorXd::Zero(3);
-  Rcpp::Rcout << v.transpose() << endl;
+  Eigen::MatrixXd m_1 = Eigen::MatrixXd::Random(2,1);
+  cout << "m_1: " << m_1 << endl; 
+  Eigen::MatrixXd m_2 = Eigen::MatrixXd::Random(1,2);
+  cout << "m_2: " << m_2 << endl; 
+  Eigen::MatrixXd m = Eigen::KroneckerProduct(m_1,m_2);
+  cout << "m: " << m << endl; 
+  
+  Eigen::MatrixXd mrow = Eigen::kroneckerProduct(m_1.row(0),m_2.row(0));
+  cout << "mrow: " << mrow << endl; 
 }
 ```
+
++ curve fitting
 
 ```{r}
 set.seed(1234)
@@ -71,4 +79,122 @@ y_pred = a$predict(x_new)
 ggplot() + geom_point(aes(x_new,y_pred),color="red")
 ```
 
++ surface fitting
+
+```{r}
+set.seed(1234)
+#tensor spline
+beta = matrix(rnorm(40,0,1),ncol=1)
+fss <- function(x,y){
+  xix = c(0.2,0.3)
+  xiy = c(0.5,0.5,0.5,0.5,0.7)
+  B = tensor_spline(cbind(x,y),xix,xiy)
+  return(B%*%beta)
+}
+```
+
+```{r}
+# parameters' configuration
+m_train = 1000
+m_test = 200
+burns = 1000
+steps = 1000
+noise = 0.1
+```
+
+```{r}
+x_1_grid <- x_2_grid <- seq(0, 1, length = 50)
+
+y_grid <- outer(x_1_grid, x_2_grid, fss)
+# plot the 3D surface
+persp(x_1_grid, x_2_grid, y_grid, xlab="x_1",ylab="x_2",zlab="y",
+      shade=0.75,main="perspective plot of Example 1")
+```
+
+```{r}
+contour(x_1_grid, x_2_grid, y_grid, drawlabels = FALSE)
+```
+
+```{r}
+image(x_1_grid, x_2_grid, y_grid)
+```
+
+
+
+```{r}
+# generate train data set
+x_1 = c(runif(m_train-2,0,1),0,1)
+x_2 = c(runif(m_train-2,0,1),0,1)
+y = fss(x_1,x_2)
+y_h = y + rnorm(m_train,0,noise)
+```
+
+```{r}
+# generate test set
+x_1_new = runif(m_test,0,1)
+x_2_new = runif(m_test,0,1)
+y_new = fss(x_1_new,x_2_new)
+```
+
+```{r}
+# run suface EBARS
+time_start = Sys.time()
+my_binebars = binebars(cbind(x_1,x_2), y_h)
+my_binebars$mcmc()
+time_end = Sys.time()
+```
+
+```{r}
+y_hat = my_binebars$predict(cbind(x_1_new,x_2_new))
+sum((y_new-y_hat)^2)/m_test
+```
+
+```{r}
+ebars_predict <- function(x,y) {
+  return(my_binebars$predict(cbind(x,y)))
+}
+y_binebars = outer(x_1_grid,x_2_grid,ebars_predict)
+```
+
+```{r}
+contour(x_1_grid, x_2_grid, y_binebars, drawlabels = FALSE)
+```
+
+
+
+```{r}
+# kernel smooth method
+library(sm)
+sm = sm.regression(cbind(x_1,x_2),y_h,method="cv",eval.points=cbind(x_1_new,x_2_new),eval.grid=FALSE)
+sum((y_new-sm$estimate)^2)/m_test
+```
+
+```{r}
+my_sm = sm.regression(cbind(x_1,x_2),y_h,method="cv",eval.points=cbind(rep(x_1_grid,times=50),rep(x_2_grid,each=50)),eval.grid=FALSE)
+y_grid_sm = matrix(my_sm$estimate, 50, 50)
+```
+
+```{r}
+contour(x_1_grid, x_2_grid, y_grid_sm, drawlabels = FALSE)
+```
+
+
+```{r}
+# local polynomial regression method
+df = data.frame(x=x_1,y=x_2,z=y_h)
+locpm = loess(z~x*y,data=df,degree=2,span=0.05)
+#control = loess.control(surface = "direct")
+y_locpm = predict(locpm,cbind(x_1_new,x_2_new))
+sum((y_new-y_locpm)^2)/m_test
+```
+
+```{r}
+locp_predict <- function(x,y) {
+  return(predict(locpm, cbind(x,y)))
+}
+```
+
+```{r}
+contour(x_1_grid, x_2_grid, outer(x_1_grid,x_2_grid,locp_predict), drawlabels = FALSE)
+```
 

@@ -33,3 +33,42 @@ Eigen::VectorXd spline_predict(const Eigen::VectorXd & x_new, const Eigen::Vecto
   return y_new;
 }
 
+Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
+                              const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2) {
+  // generate B-spline design matrix
+  Rcpp::Environment splines = Rcpp::Environment::namespace_env("splines");
+  Rcpp::Function bs = splines["bs"];
+
+  Eigen::MatrixXd B_1 = Rcpp::as<Eigen::MatrixXd>(bs(Rcpp::Named("x")=Rcpp::wrap(x.col(0)),
+                                                     Rcpp::Named("knots")=Rcpp::wrap(xi_1),
+                                                     Rcpp::Named("Boundary.knots")=Rcpp::NumericVector::create(0.0,1.0)));
+  Eigen::MatrixXd B_2 = Rcpp::as<Eigen::MatrixXd>(bs(Rcpp::Named("x")=Rcpp::wrap(x.col(1)),
+                                                     Rcpp::Named("knots")=Rcpp::wrap(xi_2),
+                                                     Rcpp::Named("Boundary.knots")=Rcpp::NumericVector::create(0.0,1.0)));
+
+  Eigen::MatrixXd B(B_1.rows(), (B_1.cols()*B_2.cols()));
+  for(int i=0;i<B.rows();i++) {
+    B.row(i) = Eigen::kroneckerProduct(B_1.row(i), B_2.row(i));
+  }
+
+  return B;
+}
+
+Rcpp::List surface_spline_regression(const Eigen::MatrixXd & x,
+                                     const Eigen::VectorXd & y,
+                                     const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2) {
+  Eigen::MatrixXd B = tensor_spline(x, xi_1, xi_2);
+  Eigen::VectorXd beta = (B.transpose()*B).ldlt().solve(B.transpose()*y);
+  double sigma = (y-B*beta).norm() / std::sqrt(x.rows());
+  return Rcpp::List::create(Rcpp::Named("beta")=beta,
+                            Rcpp::Named("sigma")=sigma);
+}
+
+
+Eigen::VectorXd surface_spline_predict(const Eigen::MatrixXd & x_new,
+                                       const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2,
+                                       const Eigen::VectorXd & beta) {
+  Eigen::MatrixXd B = tensor_spline(x_new, xi_1, xi_2);
+  Eigen::VectorXd y_new = B*beta;
+  return y_new;
+}

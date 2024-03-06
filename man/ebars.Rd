@@ -17,8 +17,8 @@ It should be contained in \verb{[0,1]} (Nevertheless, outside is valid).}
 \item{c}{double, the constant affects the proposal distribution in MCMC,
 default value is \code{0.3}. It has to be contained in \verb{[0,1]}.}
 
-\item{times}{int, decides the number of all potential knots if \code{n<0}.
-In this case, the number is \code{length(x) * times}, default value is \code{2}.}
+\item{times}{double, decides the number of all potential knots if \code{n<0}.
+In this case, the number is \code{length(x) * times}, default value is \code{2.0}.}
 
 \item{n}{int, the number of all potential knots, default value is \code{-1}.}
 }

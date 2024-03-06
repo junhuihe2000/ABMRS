@@ -30,22 +30,18 @@ void EBARS::_knots() {
 }
 
 EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
-             double _gamma, double _c, int _times, int _n) {
+             double _gamma, double _c, double _times, int _n) {
   x = _x; y = _y;
   gamma = _gamma; c = _c;
-  m = _y.size(); times = _times;
-
-  if(_n > 0) {
-    n = _n;
-  } else {
-    n = m * _times;
-  }
+  m = _y.size();
+  n = (_n>0) ? _n : int(m*_times);
 
   // transform x to t
   xmin = x.minCoeff(); xmax = x.maxCoeff();
   t = (x.array()-xmin)/(xmax-xmin);
 
   _knots();
+  k = 1;
   _initial();
   // maximum likelihood estimation
   Rcpp::List pars = spline_regression(t, y, xi);
@@ -54,7 +50,6 @@ EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
 }
 
 void EBARS::_initial() {
-  k = 1;
   Eigen::VectorXi idx = Rcpp::as<Eigen::VectorXi>(Rcpp::sample(n, k)).array()-1;
   Eigen::VectorXi idx_rem = Eigen::VectorXi::LinSpaced(n, 0, n-1);
   xi = Eigen::VectorXd::Zero(k);
@@ -176,12 +171,13 @@ Eigen::VectorXd EBARS::get_knots() {
 }
 
 
+// expose Rcpp class
 RCPP_MODULE(class_EBARS) {
   using namespace Rcpp;
 
   class_<EBARS>("EBARS")
 
-  .constructor<Eigen::VectorXd,Eigen::VectorXd,double,double,int,int>()
+  .constructor<Eigen::VectorXd,Eigen::VectorXd,double,double,double,int>("constructor")
 
 
   .method("rjmcmc", &EBARS::rjmcmc, "reversible jump MCMC")

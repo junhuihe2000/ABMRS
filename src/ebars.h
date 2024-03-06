@@ -19,7 +19,6 @@ private:
   int k; // the number of underlying knots
   int n; // the number of all potential knots
   int m; // the number of training points
-  int times; // the number of inserted knots
   double gamma, c; // constants
   double xmin, xmax; // range of x
 
@@ -49,11 +48,11 @@ private:
 public:
   // initialize EBARS
   EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
-        double _gamma = 0.5, double _c = 0.4, int _times = 3, int _n = -1);
-  void rjmcmc(int burns = 200, int steps = 200, bool flush = false, int gap = 10); // reversible jump MCMC
+        double _gamma = 1.0, double _c = 0.3, double _times = 2.0, int _n = -1);
+  void rjmcmc(int burns = 500, int steps = 500, bool flush = false, int gap = 50); // reversible jump MCMC
   // predict response values on x_new
   Eigen::VectorXd predict(const Eigen::VectorXd & x_new);
-  Eigen::VectorXd get_knots();
+  Eigen::VectorXd get_knots(); // return estimated knots
 };
 
 #endif

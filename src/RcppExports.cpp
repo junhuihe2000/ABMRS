@@ -11,10 +11,26 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// tensor_spline
+Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd& x, const Eigen::VectorXd& xi_1, const Eigen::VectorXd& xi_2);
+RcppExport SEXP _EBARS_tensor_spline(SEXP xSEXP, SEXP xi_1SEXP, SEXP xi_2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type xi_1(xi_1SEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type xi_2(xi_2SEXP);
+    rcpp_result_gen = Rcpp::wrap(tensor_spline(x, xi_1, xi_2));
+    return rcpp_result_gen;
+END_RCPP
+}
 
+RcppExport SEXP _rcpp_module_boot_class_BinEBARS();
 RcppExport SEXP _rcpp_module_boot_class_EBARS();
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_EBARS_tensor_spline", (DL_FUNC) &_EBARS_tensor_spline, 3},
+    {"_rcpp_module_boot_class_BinEBARS", (DL_FUNC) &_rcpp_module_boot_class_BinEBARS, 0},
     {"_rcpp_module_boot_class_EBARS", (DL_FUNC) &_rcpp_module_boot_class_EBARS, 0},
     {NULL, NULL, 0}
 };

@@ -11,8 +11,8 @@
 #' It should be contained in `[0,1]` (Nevertheless, outside is valid).
 #' @param c double, the constant affects the proposal distribution in MCMC,
 #' default value is `0.3`. It has to be contained in `[0,1]`.
-#' @param times int, decides the number of all potential knots if `n<0`.
-#' In this case, the number is `length(x) * times`, default value is `2`.
+#' @param times double, decides the number of all potential knots if `n<0`.
+#' In this case, the number is `length(x) * times`, default value is `2.0`.
 #' @param n int, the number of all potential knots, default value is `-1`.
 #' @returns an exposed R class of cpp class called EBARS.
 #' @export
@@ -49,4 +49,71 @@ ebars <- function(x, y, gamma = 1.0, c = 0.3, times = 2, n = -1) {
          },
          envir = new_ebars)
   return(new_ebars)
+}
+
+
+
+#' create an instance of BinEBARS
+#' @description
+#' see [ClassBinEBARS] for more details about class BinEBARS
+#'
+#'
+#' @param x a numeric matrix, (m,2), each row indicates a predictor value (x_1,x_2).
+#' @param y a numeric vector, indicates the response values,
+#' the same length as x's rows.
+#' @param gamma double, the exponent in extended BIC, default value is `1.0`.
+#' It should be contained in `[0,1]` (Nevertheless, outside is valid).
+#' @param c double, the constant affects the proposal distribution in MCMC,
+#' default value is `0.3`. It has to be contained in `[0,1]`.
+#' @param times_1 double, decides the number of all potential knots in x_1 if `n_1<0`.
+#' In this case, `n_1` is `length(x) * times`, default value is `2.0`.
+#' @param times_2 double, similar to `times_1` but in x_2, default value is `2.0`.
+#' @param n_1 int, the number of all potential knots in x_1, default value is `-1`.
+#' @param n_2 int, similar to `n_1` but in x_2, default value is `-1`.
+#' @returns an exposed R class of cpp class called BinEBARS.
+#' @export
+#' @examples
+#' library(EBARS)
+#' library(splines)
+#' set.seed(1234)
+#' #tensor spline
+#' beta = matrix(rnorm(40,0,1),ncol=1)
+#' fss <- function(x,y){
+#'   xix = c(0.2,0.3)
+#'   xiy = c(0.5,0.5,0.5,0.5,0.7)
+#'   B = tensor_spline(cbind(x,y),xix,xiy)
+#'   return(B%*%beta)
+#' }
+#' # parameters' configuration
+#' m_train = 1000; m_test = 200
+#' burns = 1000; steps = 1000
+#' noise = 0.1
+#' # generate train data set
+#' x_1 = c(runif(m_train-2,0,1),0,1)
+#' x_2 = c(runif(m_train-2,0,1),0,1)
+#' y = fss(x_1,x_2)
+#' y_h = y + rnorm(m_train,0,noise)
+#' # generate test set
+#' x_1_new = runif(m_test,0,1)
+#' x_2_new = runif(m_test,0,1)
+#' y_new = fss(x_1_new,x_2_new)
+#' # run suface EBARS
+#' time_start = Sys.time()
+#' my_binebars = binebars(cbind(x_1,x_2), y_h)
+#' my_binebars$mcmc(10,10)
+#' time_end = Sys.time()
+#' time_end - time_start
+#' y_hat = my_binebars$predict(cbind(x_1_new,x_2_new))
+#' sum((y_new-y_hat)^2)/m_test
+#'
+binebars <- function(x, y, gamma = 1.0, c = 0.3, times_1 = 2, times_2 = 2,
+                     n_1 = -1, n_2 = -1) {
+  stopifnot("x must be an (m,2) matrix"=ncol(x)==2)
+  new_binebars = BinEBARS$new(x,y,gamma,c,c(times_1,times_2),c(n_1,n_2))
+  assign('mcmc',
+         function(burns = 100, steps = 100) {
+           new_binebars$rjmcmc(burns,steps)
+         },
+         envir = new_binebars)
+  return(new_binebars)
 }
