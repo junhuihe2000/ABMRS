@@ -55,23 +55,37 @@ void BinEBARS::_knots() {
 }
 
 BinEBARS::BinEBARS(const Eigen::MatrixXd & _x, const Eigen::VectorXd & _y,
-                   double _gamma, double _c, Rcpp::NumericVector _times,
-                   Rcpp::IntegerVector _n) {
+                   Rcpp::NumericVector _para, Rcpp::IntegerVector _num, Rcpp::List _spline) {
   x = _x; y = _y;
-  gamma = _gamma; c = _c;
+  gamma = _para(0); c = _para(1);
   m = _y.size();
-  n_1 = (_n(0)>0) ? _n(0) : int(m*_times(0));
-  n_2 = (_n(1)>0) ? _n(1) : int(m*_times(1));
+  // compute the number of knots
+  if(_num(0)>0) {
+    k_1 = _num(0); fix_k_1 = true;
+  } else {
+    k_1 = 1; fix_k_1 = false;
+  }
+
+  if(_num(1)>0) {
+    k_2 = _num(1); fix_k_2 = true;
+  } else {
+    k_2 = 1; fix_k_2 = false;
+  }
+
+  n_1 = (_num(2)>0) ? _num(2) : int(m*_para(2));
+  n_2 = (_num(3)>0) ? _num(3) : int(m*_para(3));
+
+  degree_1 = int(_spline["degree_1"]); degree_2 = int(_spline["degree_2"]);
+  intercept_1 = _spline["intercept_1"]; intercept_2 = _spline["intercept_2"];
 
   // transform x to t
   xmin = x.colwise().minCoeff(); xmax = x.colwise().maxCoeff();
   t = (x.rowwise() - xmin).array().rowwise() / (xmax-xmin).array();
 
   _knots();
-  k_1 = 1; k_2 = 1;
   _initial();
   // maximum likelihood estimation
-  Rcpp::List pars = surface_spline_regression(x,y,xi_1,xi_2);
+  Rcpp::List pars = surface_spline_regression(x,y,xi_1,xi_2,degree_1,degree_2,intercept_1,intercept_2);
   beta = Rcpp::as<Eigen::VectorXd>(pars["beta"]);
   sigma = pars["sigma"];
 }
@@ -117,6 +131,7 @@ bool BinEBARS::_jump_1() {
   double birth = _birth_1();
   double death = _death_1();
   if(k_1==1) {death = 0.0;}
+  if(fix_k_1) {birth = 0.0;death = 0.0;}
 
   Eigen::VectorXd xi_new, remain_new;
   int k_new;
@@ -156,12 +171,12 @@ bool BinEBARS::_jump_1() {
   }
 
   // compute MLE
-  Rcpp::List pars_new = surface_spline_regression(t,y,xi_new,xi_2);
+  Rcpp::List pars_new = surface_spline_regression(t,y,xi_new,xi_2,degree_1,degree_2,intercept_1,intercept_2);
   Eigen::VectorXd beta_new = Rcpp::as<Eigen::VectorXd>(pars_new["beta"]);
   double sigma_new = pars_new["sigma"];
 
-  // compute marginal likelihood ratio: m^(((k+3)(l+3)-(k'+3)(l'+3))/2)*(RSS/RSS')^(m/2)
-  double like_ratio = std::pow(m, (k_1-k_new)*(k_2+3)/2.0) * std::pow(sigma/sigma_new, m);
+  // compute marginal likelihood ratio: m^(((k+p-1)(l+p-1)-(k'+p-1)(l'+p-1))/2)*(RSS/RSS')^(m/2)
+  double like_ratio = std::pow(m, (k_1-k_new)*(k_2+degree_2+intercept_2)/2.0) * std::pow(sigma/sigma_new, m);
 
   // compute accept probability
   double acc_prob = like_ratio;
@@ -182,6 +197,7 @@ bool BinEBARS::_jump_2() {
   double birth = _birth_2();
   double death = _death_2();
   if(k_2==1) {death = 0.0;}
+  if(fix_k_2) {birth = 0.0; death = 0.0;}
 
   Eigen::VectorXd xi_new, remain_new;
   int k_new;
@@ -221,12 +237,12 @@ bool BinEBARS::_jump_2() {
   }
 
   // compute MLE
-  Rcpp::List pars_new = surface_spline_regression(t,y,xi_1,xi_new);
+  Rcpp::List pars_new = surface_spline_regression(t,y,xi_1,xi_new,degree_1,degree_2,intercept_1,intercept_2);
   Eigen::VectorXd beta_new = Rcpp::as<Eigen::VectorXd>(pars_new["beta"]);
   double sigma_new = pars_new["sigma"];
 
-  // compute marginal likelihood ratio: m^(((k+3)(l+3)-(k'+3)(l'+3))/2)*(RSS/RSS')^(m/2)
-  double like_ratio = std::pow(m, (k_1+3)*(k_2-k_new)/2.0) * std::pow(sigma/sigma_new, m);
+  // compute marginal likelihood ratio: m^(((k+p-1)(l+p-1)-(k'+p-1)(l'+p-1))/2)*(RSS/RSS')^(m/2)
+  double like_ratio = std::pow(m, (k_1+degree_1+intercept_1)*(k_2-k_new)/2.0) * std::pow(sigma/sigma_new, m);
 
   // compute accept probability
   double acc_prob = like_ratio;
@@ -265,15 +281,15 @@ void BinEBARS::rjmcmc(int burns, int steps) {
 }
 
 Rcpp::List BinEBARS::get_knots() {
-  return Rcpp::List::create(Rcpp::Named("xi_1")=xi_1,
-                            Rcpp::Named("xi_2")=xi_2);
+  return Rcpp::List::create(Rcpp::Named("xi_1")=(xi_1.array()*(xmax(0)-xmin(0)) + xmin(0)),
+                            Rcpp::Named("xi_2")=(xi_2.array()*(xmax(1)-xmin(1)) + xmin(1)));
 }
 
 Eigen::VectorXd BinEBARS::predict(const Eigen::MatrixXd & x_new) {
   // transform x_new to t_new
   Eigen::MatrixXd t_new = (x_new.rowwise() - xmin).array().rowwise() / (xmax-xmin).array();
   // predict
-  Eigen::VectorXd y_new = surface_spline_predict(t_new, xi_1, xi_2, beta);
+  Eigen::VectorXd y_new = surface_spline_predict(t_new, xi_1, xi_2, beta, degree_1, degree_2, intercept_1, intercept_2);
   return y_new;
 }
 
@@ -284,7 +300,7 @@ RCPP_MODULE(class_BinEBARS) {
 
   class_<BinEBARS>("BinEBARS")
 
-    .constructor<Eigen::MatrixXd,Eigen::VectorXd,double,double,Rcpp::NumericVector,Rcpp::IntegerVector>("constructor")
+    .constructor<Eigen::MatrixXd,Eigen::VectorXd,NumericVector,IntegerVector,List>("constructor")
 
     .method("rjmcmc", &BinEBARS::rjmcmc, "reversible jump MCMC")
     .method("predict", &BinEBARS::predict, "predict by surface spline regression with EBARS")

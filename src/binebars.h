@@ -20,8 +20,11 @@ private:
   int k_1, k_2; // the number of underlying knots in the direction x_1 and x_2
   int n_1, n_2; // the number of all potential knots in the direction x_1 and x_2
   int m; // the number of training points
+  int degree_1, degree_2; // the degree of polynomials
   double gamma, c; // constants
   Eigen::RowVector2d xmin, xmax; // range of x
+  bool fix_k_1, fix_k_2; // whether k is given and fixed
+  bool intercept_1, intercept_2; // whether an intercept is included in the basis
 
   Eigen::MatrixXd x;
   Eigen::VectorXd y;
@@ -50,9 +53,12 @@ private:
 public:
   // initialize BinEBARS
   BinEBARS(const Eigen::MatrixXd & _x, const Eigen::VectorXd & _y,
-           double _gamma = 1.0, double _c = 0.3,
-           Rcpp::NumericVector _times = Rcpp::NumericVector::create(1.0,1.0),
-           Rcpp::IntegerVector _n = Rcpp::IntegerVector::create(-1,-1));
+           Rcpp::NumericVector _para = Rcpp::NumericVector::create(1.0,0.3,2.0,2.0),
+           Rcpp::IntegerVector _num = Rcpp::IntegerVector::create(-1,-1,-1,-1),
+           Rcpp::List _spline = Rcpp::List::create(Rcpp::Named("degree_1") = 3,
+                                                   Rcpp::Named("degree_2") = 3,
+                                                   Rcpp::Named("intercept_1") = false,
+                                                   Rcpp::Named("intercept_2") = false));
   void rjmcmc(int burns = 200, int steps = 200); // reversible jump MCMC
   // predict response values on x_new
   Eigen::VectorXd predict(const Eigen::MatrixXd & x_new);

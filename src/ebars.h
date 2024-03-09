@@ -19,8 +19,11 @@ private:
   int k; // the number of underlying knots
   int n; // the number of all potential knots
   int m; // the number of training points
+  int degree; // the degree of polynomials
   double gamma, c; // constants
   double xmin, xmax; // range of x
+  bool fix_k; // whether k is given and fixed
+  bool intercept; // whether an intercept is included in the basis
 
   Eigen::VectorXd x;
   Eigen::VectorXd y;
@@ -48,7 +51,10 @@ private:
 public:
   // initialize EBARS
   EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
-        double _gamma = 1.0, double _c = 0.3, double _times = 2.0, int _n = -1);
+        Rcpp::NumericVector _para = Rcpp::NumericVector::create(1.0,0.3,2.0),
+        Rcpp::IntegerVector _num = Rcpp::IntegerVector::create(-1,-1),
+        Rcpp::List _spline = Rcpp::List::create(Rcpp::Named("degree") = 3,
+                                                Rcpp::Named("intercept") = false));
   void rjmcmc(int burns = 500, int steps = 500, bool flush = false, int gap = 50); // reversible jump MCMC
   // predict response values on x_new
   Eigen::VectorXd predict(const Eigen::VectorXd & x_new);

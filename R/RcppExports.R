@@ -25,11 +25,17 @@ NULL
 #' @param x a numeric matrix, (m,2), each row indicates a predictor value (x_1,x_2).
 #' @param xi_1 a numeric vector, indicates `k_1` knots in x_1.
 #' @param xi_2 a numeric vector, indicates `k_2` knots in x_2
+#' @param degree_1 int, the degree of polynomial in x_1, default value is `3`.
+#' @param degree_2 int, the degree of polynomial in x_2, default value is `3`.
+#' @param intercept_1 bool, whether the intercept is included in the basis in x_1,
+#' default value is `FALSE`.
+#' @param intercept_2 bool, whether the intercept is included in the basis in x_2,
+#' default value is `FALSE`.
 #'
 #' @returns a bivariate tensor product spline basis matrix, m rows and (k_1+3)*(k_2+3) cols.
 #'
 #' @export
-tensor_spline <- function(x, xi_1, xi_2) {
-    .Call(`_EBARS_tensor_spline`, x, xi_1, xi_2)
+tensor_spline <- function(x, xi_1, xi_2, degree_1 = 3L, degree_2 = 3L, intercept_1 = FALSE, intercept_2 = FALSE) {
+    .Call(`_EBARS_tensor_spline`, x, xi_1, xi_2, degree_1, degree_2, intercept_1, intercept_2)
 }
 

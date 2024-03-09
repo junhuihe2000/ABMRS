@@ -24,15 +24,11 @@ using namespace std;
 
 // [[Rcpp::export(testcpp)]]
 void testcpp() {
-  Eigen::MatrixXd m_1 = Eigen::MatrixXd::Random(2,1);
-  cout << "m_1: " << m_1 << endl; 
-  Eigen::MatrixXd m_2 = Eigen::MatrixXd::Random(1,2);
-  cout << "m_2: " << m_2 << endl; 
-  Eigen::MatrixXd m = Eigen::KroneckerProduct(m_1,m_2);
-  cout << "m: " << m << endl; 
-  
-  Eigen::MatrixXd mrow = Eigen::kroneckerProduct(m_1.row(0),m_2.row(0));
-  cout << "mrow: " << mrow << endl; 
+  bool intercept;
+  Rcpp::List mylist = Rcpp::List::create(Rcpp::Named("bool")=true);
+  intercept = mylist["bool"];
+  int a = 10;
+  cout << intercept + a << endl;
 }
 ```
 
@@ -41,14 +37,15 @@ void testcpp() {
 ```{r}
 set.seed(1234)
 knot = c(0.4,0.4,0.4,0.4,0.7)
-beta = matrix(c(2,-5,5,2,-3,-1,2),ncol=1)
+beta = matrix(c(3,-5,5,-3,3,-5,3,-2),ncol=1)
+# beta = matrix(c(3,-5,5,-3,3,-4),ncol=1)
 m_train = 200; m_test = 50
 ```
 
 ```{r}
 # generate train data set
 x = c(0,sort(runif(m_train, 0, 1))[c(-1,-m_train)],1)
-B = ns(x,knots=knot,intercept=TRUE,Boundary.knots=c(0,1))
+B = bs(x,knots=knot,Boundary.knots=c(0,1))
 y = B%*%beta
 y_h = y + rnorm(m_train,0,0.05)
 
@@ -70,9 +67,14 @@ time_end = Sys.time()
 print(time_end-time_start)
 ```
 
+```{r}
+a$knots()
+```
+
 
 ```{r}
 y_pred = a$predict(x_new)
+sum((y_pred-y_new)^2)/m_test
 ```
 
 ```{r}
@@ -86,8 +88,8 @@ set.seed(1234)
 #tensor spline
 beta = matrix(rnorm(40,0,1),ncol=1)
 fss <- function(x,y){
-  xix = c(0.2,0.3)
-  xiy = c(0.5,0.5,0.5,0.5,0.7)
+  xix = c(0.2,0.5)
+  xiy = c(0.4,0.4,0.4,0.4,0.7)
   B = tensor_spline(cbind(x,y),xix,xiy)
   return(B%*%beta)
 }
@@ -142,7 +144,13 @@ time_start = Sys.time()
 my_binebars = binebars(cbind(x_1,x_2), y_h)
 my_binebars$mcmc()
 time_end = Sys.time()
+time_end - time_start
 ```
+
+```{r}
+my_binebars$knots()
+```
+
 
 ```{r}
 y_hat = my_binebars$predict(cbind(x_1_new,x_2_new))

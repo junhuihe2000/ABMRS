@@ -30,21 +30,30 @@ void EBARS::_knots() {
 }
 
 EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
-             double _gamma, double _c, double _times, int _n) {
+             Rcpp::NumericVector _para, Rcpp::IntegerVector _num, Rcpp::List _spline) {
   x = _x; y = _y;
-  gamma = _gamma; c = _c;
+  gamma = _para(0); c = _para(1);
   m = _y.size();
+  double _times = _para(2);
+  // compute the number of knots
+  int _k = _num(0);
+  fix_k = (_k>0) ? true : false;
+  k = (_k>0) ? _k : 1;
+
+  int _n = _num(1);
   n = (_n>0) ? _n : int(m*_times);
+
+  degree = int(_spline["degree"]);
+  intercept = _spline["intercept"];
 
   // transform x to t
   xmin = x.minCoeff(); xmax = x.maxCoeff();
   t = (x.array()-xmin)/(xmax-xmin);
 
   _knots();
-  k = 1;
   _initial();
   // maximum likelihood estimation
-  Rcpp::List pars = spline_regression(t, y, xi);
+  Rcpp::List pars = spline_regression(t, y, xi, degree, intercept);
   beta = Rcpp::as<Eigen::VectorXd>(pars["beta"]);
   sigma = pars["sigma"];
 }
@@ -72,6 +81,7 @@ bool EBARS::_jump() {
   double birth = _birth();
   double death = _death();
   if(k==1) {death = 0.0;}
+  if(fix_k) {birth = 0.0; death = 0.0;}
 
   Eigen::VectorXd xi_new, remain_new;
   int k_new;
@@ -111,7 +121,7 @@ bool EBARS::_jump() {
   }
 
   // compute MLE
-  Rcpp::List pars_new = spline_regression(t,y,xi_new);
+  Rcpp::List pars_new = spline_regression(t,y,xi_new,degree,intercept);
   Eigen::VectorXd beta_new = Rcpp::as<Eigen::VectorXd>(pars_new["beta"]);
   double sigma_new = pars_new["sigma"];
 
@@ -133,8 +143,9 @@ bool EBARS::_jump() {
 }
 
 void EBARS::_update() {
+  bool state = false;
   while(true) {
-    bool state = _jump();
+    state = _jump();
     if(state) {
       break;
     }
@@ -162,12 +173,12 @@ Eigen::VectorXd EBARS::predict(const Eigen::VectorXd & x_new) {
   // transform x_new to t_new
   Eigen::VectorXd t_new = (x_new.array()-xmin)/(xmax-xmin);
   // predict
-  Eigen::VectorXd y_new = spline_predict(t_new, xi, beta);
+  Eigen::VectorXd y_new = spline_predict(t_new, xi, beta, degree, intercept);
   return y_new;
 }
 
 Eigen::VectorXd EBARS::get_knots() {
-  return xi;
+  return (xi.array()*(xmax-xmin) + xmin);
 }
 
 
@@ -177,7 +188,7 @@ RCPP_MODULE(class_EBARS) {
 
   class_<EBARS>("EBARS")
 
-  .constructor<Eigen::VectorXd,Eigen::VectorXd,double,double,double,int>("constructor")
+  .constructor<Eigen::VectorXd,Eigen::VectorXd,NumericVector,IntegerVector,List>("constructor")
 
 
   .method("rjmcmc", &EBARS::rjmcmc, "reversible jump MCMC")

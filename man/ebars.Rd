@@ -4,7 +4,17 @@
 \alias{ebars}
 \title{create an instance of EBARS}
 \usage{
-ebars(x, y, gamma = 1, c = 0.3, times = 2, n = -1)
+ebars(
+  x,
+  y,
+  gamma = 1,
+  c = 0.3,
+  times = 2,
+  k = -1,
+  n = -1,
+  degree = 3,
+  intercept = FALSE
+)
 }
 \arguments{
 \item{x}{a numeric vector, indicates the predictor values.}
@@ -20,7 +30,15 @@ default value is \code{0.3}. It has to be contained in \verb{[0,1]}.}
 \item{times}{double, decides the number of all potential knots if \code{n<0}.
 In this case, the number is \code{length(x) * times}, default value is \code{2.0}.}
 
+\item{k}{int, the number of knots is fixed if \code{k>0}. Otherwise \code{k} will
+be estimated in the algorithm, default value is \code{-1}.}
+
 \item{n}{int, the number of all potential knots, default value is \code{-1}.}
+
+\item{degree}{int, the degree of polynomial spline, default value is \code{3}.}
+
+\item{intercept}{bool, whether the intercept is included in the basis,
+default value is \code{FALSE}.}
 }
 \value{
 an exposed R class of cpp class called EBARS.
