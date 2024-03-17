@@ -21,4 +21,3 @@ Imports:
 LinkingTo:
     Rcpp,
     RcppEigen
-SystemRequirements: GNU make, C++11

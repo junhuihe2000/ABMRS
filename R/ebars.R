@@ -5,6 +5,5 @@
 #' @importFrom methods new
 #' @importFrom stats dist
 #' @importFrom stats optim
-#' @importFrom stats nlm
 #' @importFrom vegan isomap
 NULL
