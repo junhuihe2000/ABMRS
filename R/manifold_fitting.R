@@ -72,8 +72,8 @@ manifold_fitting <- function(x, d, epsilon = 0.05, max_iter = 100, k = 10) {
   # iteration
   count = 1;
   ssd_ratio = 1
+  cat(paste0("The ",count,"-th iteration: ","the consistency loss is ",round(ssd,5),".\n"))
   while(ssd_ratio>epsilon & count < max_iter) {
-    cat(paste0("The ",count,"-th iteration: ","the consistency loss is ",round(ssd,5),".\n"))
     count = count + 1
     f_new = embedding_map(u, x)
     lower = sapply(c(1:d),function(i) {return(min(u[,i]))})
@@ -83,6 +83,7 @@ manifold_fitting <- function(x, d, epsilon = 0.05, max_iter = 100, k = 10) {
 
     ssd_ratio = abs(ssd_new-ssd)/ssd
     f = f_new; u = u_new; ssd = ssd_new
+    cat(paste0("The ",count,"-th iteration: ","the consistency loss is ",round(ssd,5),".\n"))
   }
   return(list(map=f,lower=lower,upper=upper))
 }

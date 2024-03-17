@@ -85,7 +85,7 @@ BinEBARS::BinEBARS(const Eigen::MatrixXd & _x, const Eigen::VectorXd & _y,
   _knots();
   _initial();
   // maximum likelihood estimation
-  Rcpp::List pars = surface_spline_regression(x,y,xi_1,xi_2,degree_1,degree_2,intercept_1,intercept_2);
+  Rcpp::List pars = surface_spline_regression(t,y,xi_1,xi_2,degree_1,degree_2,intercept_1,intercept_2);
   beta = Rcpp::as<Eigen::VectorXd>(pars["beta"]);
   sigma = pars["sigma"];
 }
