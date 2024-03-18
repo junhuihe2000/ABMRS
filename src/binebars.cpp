@@ -260,7 +260,8 @@ bool BinEBARS::_jump_2() {
 
 void BinEBARS::_update() {
   bool state = false;
-  while(true) {
+  int max_iter = 100;
+  for(int i=0;i<max_iter;i++) {
     // randomly update x_1 or x_2
     double direc = Rcpp::runif(1,0.0,1.0)[0]; // which direction to jump
     if(direc < 0.5) {

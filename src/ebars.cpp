@@ -144,7 +144,8 @@ bool EBARS::_jump() {
 
 void EBARS::_update() {
   bool state = false;
-  while(true) {
+  int max_iter = 100;
+  for(int i=0;i<max_iter;i++) {
     state = _jump();
     if(state) {
       break;
