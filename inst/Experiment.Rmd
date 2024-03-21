@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(devtools)
 library(splines)
 library(ggplot2)
+library(plot3D)
 ```
 
 ```{Rcpp}
@@ -208,249 +209,9 @@ contour(x_1_grid, x_2_grid, outer(x_1_grid,x_2_grid,locp_predict), drawlabels = 
 
 # manifold fitting
 
++ Sine
 ```{r}
 set.seed(1234)
-```
-
-```{r}
-# Simulated data
-I=1000                              # Sample size
-t=rnorm(I,mean = 0,sd=1)
-sd.noise=0.15                       # Standard deviation of the noise 
-e1=rnorm(I,mean = 0,sd=sd.noise)    # noise
-e2=rnorm(I,mean = 0,sd=sd.noise)
-X=matrix(NA,ncol = 2,nrow = I)
-manifold=function(tau){ return(c(tau,sin(tau+pi/2))) }
-for(i in 1:I){ X[i,]=manifold(t[i]) }
-data.points=X+cbind(e1,e2) 
-```
-
-```{r}
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-```
-
-
-```{r}
-result=PME(x.obs=data.points, d=1)
-```
-
-```{r}
-# Plot the fitted manifold
-f=result$embedding.map
-t.test=seq(from=-100,to=100,by=0.05)
-t.length=length(t.test)
-x.test=matrix(NA,ncol=2,nrow = t.length)
-for(i in 1:t.length){ x.test[i,]=f(t.test[i]) }
-```
-
-```{r}
-res = manifold_fitting(x=data.points,d=1)
-```
-
-```{r}
-x_test = res$map(seq(-3,3,length.out=500))
-```
-
-```{r}
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-lines(x.test[,1],x.test[,2],col="blue",type = "l",lwd=3)
-lines(x_test[,1],x_test[,2],col="red",type = "l",lwd=3)
-```
-
-+ Case II
-
-```{r}
-set.seed(1234)
-```
-
-```{r}
-# Simulated data
-I=500                              # Sample size
-theta = runif(I,-pi/2,0)
-x = matrix(NA,2*I,2)
-for(i in c(1:I)) {x[i,]=c(-1+cos(theta[i]),1+sin(theta[i]))}
-alpha = runif(I, -pi, -pi/2)
-for(i in c(1:I)) {x[(I+i),]=c(1+cos(alpha[i]),1+sin(alpha[i]))}
-```
-
-```{r}
-sd.noise = 0.025
-e1 = rnorm(2*I,0,sd.noise)
-e2 = rnorm(2*I,0,sd.noise)
-data.points = x + cbind(e1,e2)
-```
-
-
-```{r}
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-```
-
-```{r}
-result=PME(x.obs=data.points, d=1)
-```
-
-```{r}
-# Plot the fitted manifold
-f=result$embedding.map
-t.test=seq(from=-100,to=100,by=0.05)
-t.length=length(t.test)
-x.test=matrix(NA,ncol=2,nrow = t.length)
-for(i in 1:t.length){ x.test[i,]=f(t.test[i]) }
-```
-
-```{r}
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-lines(x.test[,1],x.test[,2],col="blue",type = "l",lwd=3)
-```
-
-```{r}
-res = manifold_fitting(x=data.points,d=1)
-```
-
-```{r}
-center = (res$lower+res$upper)/2
-radius = abs(res$upper-res$lower)/2
-x_test = res$map(seq(center-radius*0.95,center+radius*0.95,length.out=500))
-```
-
-```{r}
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-lines(x.test[,1],x.test[,2],col="blue",type = "l",lwd=3)
-lines(x_test[,1],x_test[,2],col="red",type = "l",lwd=3)
-```
-
-+ Case III
-
-```{r}
-### Case II
-
-manifold=function(t){ return(c(cos(t),sin(t)))}
-I=1000
-t=runif(I,min = 0,max = 1.5*pi)
-X=manifold(t)
-sd.noise=0.1
-e1=rnorm(I,mean = 0, sd=sd.noise)
-e2=rnorm(I,mean = 0, sd=sd.noise)
-data.points=X+cbind(e1,e2)  
-```
-
-```{r}
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-```
-
-
-```{r}
-result=PME(x.obs=data.points, d=1)
-```
-
-
-```{r}
-f=result$embedding.map
-t.test=seq(from=-100,to=100,by=0.05)
-t.length=length(t.test)
-x.test=matrix(NA,ncol=2,nrow = t.length)
-for(i in 1:t.length){ x.test[i,]=f(t.test[i]) }
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-lines(x.test[,1],x.test[,2],col="red",type = "l",lwd=3)
-```
-
-```{r}
-res = manifold_fitting(x=data.points,d=1)
-```
-
-```{r}
-center = (res$lower+res$upper)/2
-radius = abs(res$upper-res$lower)/2
-x_test = res$map(seq(center-radius*0.95,center+radius*0.95,length.out=500))
-```
-
-```{r}
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-lines(x.test[,1],x.test[,2],col="blue",type = "l",lwd=3)
-lines(x_test[,1],x_test[,2],col="red",type = "l",lwd=3)
-```
-
-+ Spiral
-```{r}
-set.seed(1234)
-```
-
-```{r}
-I = 1000
-theta = seq(0, 6*pi, length.out=I)
-X = cbind((theta+4)^(0.7)*cos(theta), (theta+4)^(0.7)*sin(theta))
-```
-
-```{r}
-sd.noise = 0.15
-data.points = X + cbind(rnorm(I,0,sd.noise), rnorm(I,0,sd.noise))
-```
-
-```{r}
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-```
-
-```{r}
-result=PME(x.obs=data.points, d=1)
-```
-
-```{r}
-f=result$embedding.map
-t.test=seq(from=-100,to=100,by=0.05)
-t.length=length(t.test)
-x.test=matrix(NA,ncol=2,nrow = t.length)
-for(i in 1:t.length){ x.test[i,]=f(t.test[i]) }
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-lines(x.test[,1],x.test[,2],col="red",type = "l",lwd=3)
-```
-
-```{r}
-res = manifold_fitting(x=data.points,d=1)
-```
-
-```{r}
-center = (res$lower+res$upper)/2
-radius = abs(res$upper-res$lower)/2
-x_test = res$map(seq(center-radius*0.99,center+radius*0.99,length.out=500))
-```
-
-```{r}
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-lines(x.test[,1],x.test[,2],col="blue",type = "l",lwd=3)
-lines(x_test[,1],x_test[,2],col="red",type = "l",lwd=3)
 ```
 
 ```{r}
@@ -473,23 +234,6 @@ plot(data.points[,1], data.points[,2],
 ```
 
 ```{r}
-result=PME(x.obs=data.points, d=1)
-```
-
-```{r}
-f=result$embedding.map
-t.test=seq(from=-100,to=100,by=0.05)
-t.length=length(t.test)
-x.test=matrix(NA,ncol=2,nrow = t.length)
-for(i in 1:t.length){ x.test[i,]=f(t.test[i]) }
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-lines(x.test[,1],x.test[,2],col="red",type = "l",lwd=3)
-```
-
-```{r}
 res = manifold_fitting(x=data.points,d=1)
 ```
 
@@ -504,6 +248,86 @@ plot(data.points[,1], data.points[,2],
      pch=20, col="grey",
      main="Principal Manifold Estimation",
      xlab=" ", ylab=" ")
-lines(x.test[,1],x.test[,2],col="blue",type = "l",lwd=3)
 lines(x_test[,1],x_test[,2],col="red",type = "l",lwd=3)
+```
+
++ Spiral in R^2
+```{r}
+set.seed(1234)
+```
+
+```{r}
+I = 1000; I.test = 1000
+theta = seq(0, 6*pi, length.out=I)
+x = cbind(2*(theta+4)^(0.7)*cos(theta), 2*(theta+4)^(0.7)*sin(theta))
+
+sd = 0.3
+xobs = x + cbind(rnorm(I,0,sd), rnorm(I,0,sd))
+```
+
+```{r}
+ggplot() + geom_point(aes(xobs[,1],xobs[,2]),size=0.6,col="red") +
+  theme(axis.title.x=element_blank(),axis.title.y=element_blank())
+```
+
+```{r}
+# EBARS
+time.start = Sys.time()
+result.ebars = manifold_fitting(xobs, d=1)
+time.end = Sys.time()
+print(time.end-time.start)
+```
+
+```{r}
+center = (result.ebars$lower+result.ebars$upper)/2
+radius = abs(result.ebars$upper-result.ebars$lower)/2
+x.ebars = result.ebars$map(seq(center-radius*0.99,center+radius*0.99,length.out=I.test))
+ggplot() + geom_path(aes(x.ebars[,1],x.ebars[,2])) +
+  theme(axis.title.x=element_blank(),axis.title.y=element_blank())
+```
+
++ space spiral in R^3
+```{r}
+set.seed(1234)
+```
+
+```{r}
+I = 1000; I.test = 1000
+theta = seq(0, 6*pi, length.out=I)
+x = cbind(2*(theta+4)^(0.7)*cos(theta), 2*(theta+4)^(0.7)*sin(theta), -2*(theta+4)^(0.7))
+
+sd = 0.3
+xobs = x + cbind(rnorm(I,0,sd), rnorm(I,0,sd), rnorm(I,0,sd))
+```
+
+```{r}
+scatter3D(xobs[,1], xobs[,2], xobs[,3],
+          theta = 15, phi = 30,
+          pch = 20, box=TRUE, cex = 0.2, colkey = FALSE, 
+          border="black", shade=0.8, 
+          bty = "g", ticktype = "detailed",
+          main="")
+```
+
+```{r}
+# EBARS
+time.start = Sys.time()
+result.ebars = manifold_fitting(xobs, d=1)
+time.end = Sys.time()
+print(time.end-time.start)
+```
+
+```{r}
+center = (result.ebars$lower+result.ebars$upper)/2
+radius = abs(result.ebars$upper-result.ebars$lower)/2
+x.ebars = result.ebars$map(seq(center-radius*0.99,center+radius*0.99,length.out=I.test))
+```
+
+```{r}
+scatter3D(x.ebars[,1], x.ebars[,2], x.ebars[,3],
+          theta = 15, phi = 30, col = "black",
+          pch = 20, box=TRUE, cex = 0.2, colkey = FALSE, 
+          border="black", shade=0.8, 
+          bty = "g", ticktype = "detailed",
+          main="")
 ```

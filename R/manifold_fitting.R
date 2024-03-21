@@ -63,12 +63,14 @@ manifold_fitting <- function(x, d, epsilon = 0.05, max_iter = 100, k = 10) {
   u_initial = isomap_initial$points
   f = embedding_map(u_initial, x)
 
-  lower_init = sapply(c(1:d),function(i) {return(min(u_initial[,i]))})
-  upper_init = sapply(c(1:d),function(i) {return(max(u_initial[,i]))})
+  lower = sapply(c(1:d),function(i) {return(min(u_initial[,i]))})
+  upper = sapply(c(1:d),function(i) {return(max(u_initial[,i]))})
   # projection
-  u = matrix(t(sapply(c(1:n), function(i) {return(projection_func(x[i,],f,u_initial[i,],lower_init,upper_init))})),ncol=d)
+  u = matrix(t(sapply(c(1:n), function(i) {return(projection_func(x[i,],f,u_initial[i,],lower,upper))})),ncol=d)
   ssd = sum((x-f(u))^2)
+  cat(paste0("The consistency loss is ",round(ssd,5),".\n"))
 
+  if(FALSE) {
   # iteration
   count = 1;
   ssd_ratio = 1
@@ -81,9 +83,12 @@ manifold_fitting <- function(x, d, epsilon = 0.05, max_iter = 100, k = 10) {
     u_new = matrix(t(sapply(c(1:n), function(i) {return(projection_func(x[i,],f_new,u[i,],lower,upper))})),ncol=d)
     ssd_new = sum((x-f_new(u_new))^2)
 
-    ssd_ratio = abs(ssd_new-ssd)/ssd
-    f = f_new; u = u_new; ssd = ssd_new
+    ssd_ratio = (ssd-ssd_new)/ssd
+    if(ssd > ssd_new) {
+      f = f_new; u = u_new; ssd = ssd_new
+    }
     cat(paste0("The ",count,"-th iteration: ","the consistency loss is ",round(ssd,5),".\n"))
+  }
   }
   return(list(map=f,lower=lower,upper=upper))
 }
