@@ -9,16 +9,16 @@ binebars(
   y,
   gamma = 1,
   c = 0.3,
-  times_1 = 2,
-  times_2 = 2,
+  times_1 = 3,
+  times_2 = 3,
   k_1 = -1,
   k_2 = -1,
   n_1 = -1,
   n_2 = -1,
   degree_1 = 3,
   degree_2 = 3,
-  intercept_1 = FALSE,
-  intercept_2 = FALSE
+  intercept_1 = TRUE,
+  intercept_2 = TRUE
 )
 }
 \arguments{
@@ -34,9 +34,9 @@ It should be contained in \verb{[0,1]} (Nevertheless, outside is valid).}
 default value is \code{0.3}. It has to be contained in \verb{[0,1]}.}
 
 \item{times_1}{double, decides the number of all potential knots in x_1 if \code{n_1<0}.
-In this case, \code{n_1} is \code{length(x) * times}, default value is \code{2.0}.}
+In this case, \code{n_1} is \code{length(x) * times}, default value is \code{3.0}.}
 
-\item{times_2}{double, similar to \code{times_1} but in x_2, default value is \code{2.0}.}
+\item{times_2}{double, similar to \code{times_1} but in x_2, default value is \code{3.0}.}
 
 \item{k_1}{int, the number of knots in x_1 is fixed if \code{k_1>0}. Otherwise \code{k_1} will
 be estimated in the algorithm, default value is \code{-1}.}
@@ -53,10 +53,10 @@ be estimated in the algorithm, default value is \code{-1}.}
 \item{degree_2}{int, the degree of polynomial spline in x_2, default value is \code{3}.}
 
 \item{intercept_1}{bool, whether the intercept is included in the basis in x_1,
-default value is \code{FALSE}.}
+default value is \code{TRUE}.}
 
 \item{intercept_2}{bool, whether the intercept is included in the basis in x_2,
-default value is \code{FALSE}.}
+default value is \code{TRUE}.}
 }
 \value{
 an exposed R class of cpp class called BinEBARS.

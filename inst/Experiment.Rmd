@@ -331,3 +331,4 @@ scatter3D(x.ebars[,1], x.ebars[,2], x.ebars[,3],
           bty = "g", ticktype = "detailed",
           main="")
 ```
+

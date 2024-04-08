@@ -130,7 +130,7 @@ bool BinEBARS::_jump_1() {
   double type = Rcpp::runif(1, 0.0, 1.0)[0];
   double birth = _birth_1();
   double death = _death_1();
-  if(k_1==1) {death = 0.0;}
+  if(k_1==0 && type>=birth) {return true;}
   if(fix_k_1) {birth = 0.0;death = 0.0;}
 
   Eigen::VectorXd xi_new, remain_new;
@@ -196,7 +196,7 @@ bool BinEBARS::_jump_2() {
   double type = Rcpp::runif(1, 0.0, 1.0)[0];
   double birth = _birth_2();
   double death = _death_2();
-  if(k_2==1) {death = 0.0;}
+  if(k_2==0 && type>=birth) {return true;}
   if(fix_k_2) {birth = 0.0; death = 0.0;}
 
   Eigen::VectorXd xi_new, remain_new;

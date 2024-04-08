@@ -12,13 +12,13 @@
 #' @param c double, the constant affects the proposal distribution in MCMC,
 #' default value is `0.3`. It has to be contained in `[0,1]`.
 #' @param times double, decides the number of all potential knots if `n<0`.
-#' In this case, the number is `length(x) * times`, default value is `2.0`.
+#' In this case, the number is `length(x) * times`, default value is `3.0`.
 #' @param k int, the number of knots is fixed if `k>0`. Otherwise `k` will
 #' be estimated in the algorithm, default value is `-1`.
 #' @param n int, the number of all potential knots, default value is `-1`.
 #' @param degree int, the degree of polynomial spline, default value is `3`.
 #' @param intercept bool, whether the intercept is included in the basis,
-#' default value is `FALSE`.
+#' default value is `TRUE`.
 #' @returns an exposed R class of cpp class called EBARS.
 #' @export
 #' @examples
@@ -46,8 +46,8 @@
 #' y_new = predict(B,x_new)%*%beta
 #' y_pred = a$predict(x_new)
 #'
-ebars <- function(x, y, gamma = 1.0, c = 0.3, times = 2,
-                  k = -1, n = -1, degree = 3, intercept = FALSE) {
+ebars <- function(x, y, gamma = 1.0, c = 0.3, times = 3,
+                  k = -1, n = -1, degree = 3, intercept = TRUE) {
   new_ebars = EBARS$new(x,y,c(gamma,c,times),c(k,n),list("degree"=degree,"intercept"=intercept))
   assign('mcmc',
          function(burns = 500, steps = 500, flush = FALSE, gap = 50) {
@@ -72,8 +72,8 @@ ebars <- function(x, y, gamma = 1.0, c = 0.3, times = 2,
 #' @param c double, the constant affects the proposal distribution in MCMC,
 #' default value is `0.3`. It has to be contained in `[0,1]`.
 #' @param times_1 double, decides the number of all potential knots in x_1 if `n_1<0`.
-#' In this case, `n_1` is `length(x) * times`, default value is `2.0`.
-#' @param times_2 double, similar to `times_1` but in x_2, default value is `2.0`.
+#' In this case, `n_1` is `length(x) * times`, default value is `3.0`.
+#' @param times_2 double, similar to `times_1` but in x_2, default value is `3.0`.
 #' @param k_1 int, the number of knots in x_1 is fixed if `k_1>0`. Otherwise `k_1` will
 #' be estimated in the algorithm, default value is `-1`.
 #' @param k_2 int, the number of knots in x_2 is fixed if `k_2>0`. Otherwise `k_2` will
@@ -83,9 +83,9 @@ ebars <- function(x, y, gamma = 1.0, c = 0.3, times = 2,
 #' @param degree_1 int, the degree of polynomial spline in x_1, default value is `3`.
 #' @param degree_2 int, the degree of polynomial spline in x_2, default value is `3`.
 #' @param intercept_1 bool, whether the intercept is included in the basis in x_1,
-#' default value is `FALSE`.
+#' default value is `TRUE`.
 #' @param intercept_2 bool, whether the intercept is included in the basis in x_2,
-#' default value is `FALSE`.
+#' default value is `TRUE`.
 #' @returns an exposed R class of cpp class called BinEBARS.
 #' @export
 #' @examples
@@ -122,9 +122,9 @@ ebars <- function(x, y, gamma = 1.0, c = 0.3, times = 2,
 #' y_hat = my_binebars$predict(cbind(x_1_new,x_2_new))
 #' sum((y_new-y_hat)^2)/m_test
 #'
-binebars <- function(x, y, gamma = 1.0, c = 0.3, times_1 = 2, times_2 = 2,
+binebars <- function(x, y, gamma = 1.0, c = 0.3, times_1 = 3, times_2 = 3,
                      k_1 = -1, k_2 = -1, n_1 = -1, n_2 = -1,
-                     degree_1 = 3, degree_2 = 3, intercept_1 = FALSE, intercept_2 = FALSE) {
+                     degree_1 = 3, degree_2 = 3, intercept_1 = TRUE, intercept_2 = TRUE) {
   stopifnot("x must be an (m,2) matrix"=ncol(x)==2)
   new_binebars = BinEBARS$new(x,y,c(gamma,c,times_1,times_2),c(k_1,k_2,n_1,n_2),
                               list("degree_1"=degree_1,"degree_2"=degree_2,"intercept_1"=intercept_1,"intercept_2"=intercept_2))

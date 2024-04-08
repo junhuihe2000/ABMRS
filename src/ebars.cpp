@@ -80,7 +80,8 @@ bool EBARS::_jump() {
   double type = Rcpp::runif(1, 0.0, 1.0)[0];
   double birth = _birth();
   double death = _death();
-  if(k==1) {death = 0.0;}
+  // when k = 0, relocation does no update
+  if(k==0 && type>=birth) {return true;}
   if(fix_k) {birth = 0.0; death = 0.0;}
 
   Eigen::VectorXd xi_new, remain_new;

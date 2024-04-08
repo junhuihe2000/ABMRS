@@ -5,8 +5,8 @@ embedding_map <- function(u, x) {
   p = ncol(x); d = ncol(u)
   maps_list = list()
   for(i in c(1:p)) {
-    if(d==1) {bars_new = ebars(u, x[,i])}
-    else if(d==2) {bars_new = binebars(u, x[,i])}
+    if(d==1) {bars_new = ebars(u, x[,i], intercept = F)}
+    else if(d==2) {bars_new = binebars(u, x[,i], intercept_1 = F, intercept_2 = F)}
     bars_new$mcmc()
     maps_list[[i]] = bars_new
   }
@@ -16,7 +16,7 @@ embedding_map <- function(u, x) {
 }
 
 projection_func <- function(x, f, init_guess, lower_bound, upper_bound) {
-  obj = function(t) {return(sum((x-f(t))^2))}
+  obj = function(t) {return(sum((x-f(rbind(t)))^2))}
   # res = nlm(obj, p = init_guess)
   res = optim(par=init_guess,fn=obj,lower=lower_bound,upper=upper_bound,method="L-BFGS-B")
   return(res$par)
