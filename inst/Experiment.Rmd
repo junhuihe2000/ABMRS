@@ -24,12 +24,9 @@ library(plot3D)
 using namespace std;
 
 // [[Rcpp::export(testcpp)]]
-void testcpp() {
-  bool intercept;
-  Rcpp::List mylist = Rcpp::List::create(Rcpp::Named("bool")=true);
-  intercept = mylist["bool"];
-  int a = 10;
-  cout << intercept + a << endl;
+Eigen::VectorXd testcpp() {
+  Eigen::VectorXd v = Eigen::VectorXd::Zero(0);
+  return (v.array()*10+1);
 }
 ```
 

@@ -16,8 +16,7 @@ Imports:
     RcppEigen,
     splines,
     methods,
-    stats,
-    vegan
+    stats
 LinkingTo:
     Rcpp,
     RcppEigen

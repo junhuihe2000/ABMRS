@@ -4,24 +4,20 @@
 \alias{manifold_fitting}
 \title{Fit an 1 or 2 dimensional manifold with EBARS}
 \usage{
-manifold_fitting(x, d, epsilon = 0.05, max_iter = 100, k = 10)
+manifold_fitting(x, d, embedding_map)
 }
 \arguments{
 \item{x}{a numeric matrix, (n,p), each row indicates a point in R^p.}
 
 \item{d}{int, the intrinsic dimension.}
 
-\item{epsilon}{double, the stop criterion, default to \code{0.05}.}
-
-\item{max_iter}{int, the maximum iteration number, default to \code{100}.}
-
-\item{k}{int, number of shortest dissimilarities retained for a point in
-\code{vegan::isomap()}, default to \code{10}.}
+\item{embedding_map}{function, with the usage \code{embedding_map(x,d)},
+return the embedding representation, a numeric matrix with dim(n,d).}
 }
 \value{
 a list including:
 \itemize{
-\item{\code{map}, the estimated embedding map.}
+\item{\code{map}, the estimated reconstruction map.}
 \item{\code{lower}, the lower bound of covariates in \code{map}.}
 \item{\code{upper}, the upper bound of covariates in \code{map}.}
 }
@@ -38,7 +34,11 @@ sd.noise=0.05
 e1=rnorm(I,mean = 0, sd=sd.noise)
 e2=rnorm(I,mean = 0, sd=sd.noise)
 data.points=X+cbind(e1,e2)
-res = manifold_fitting(x=data.points,d=1)
+embedding_map <- function(x, d) {
+  u = vegan::isomap(stat::dist(x), ndim=d)$points
+  return(u)
+}
+res = manifold_fitting(data.points,1,embedding_map)
 center = (res$lower+res$upper)/2
 radius = abs(res$upper-res$lower)/2
 x_test = res$map(seq(center-radius*0.95,center+radius*0.95,length.out=500))
