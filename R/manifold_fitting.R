@@ -30,8 +30,8 @@ projection_func <- function(x, f, init_guess, lower_bound, upper_bound) {
 #' @returns a list including:
 #' \itemize{
 #' \item{`map`, the estimated reconstruction map.}
-#' \item{`lower`, the lower bound of covariates in `map`.}
-#' \item{`upper`, the upper bound of covariates in `map`.}
+#' \item{`u`, the manifold projection.}
+#' \item{`fitted`, the manifold estimation on `u`.}
 #' }
 #' @export
 #'
@@ -45,13 +45,11 @@ projection_func <- function(x, f, init_guess, lower_bound, upper_bound) {
 #' e2=rnorm(I,mean = 0, sd=sd.noise)
 #' data.points=X+cbind(e1,e2)
 #' embedding_map <- function(x, d) {
-#'   u = vegan::isomap(stat::dist(x), ndim=d)$points
+#'   u = vegan::isomap(stats::dist(x), ndim=d, k = 10)$points
 #'   return(u)
 #' }
 #' res = manifold_fitting(data.points,1,embedding_map)
-#' center = (res$lower+res$upper)/2
-#' radius = abs(res$upper-res$lower)/2
-#' x_test = res$map(seq(center-radius*0.95,center+radius*0.95,length.out=500))
+#' x_test = res$fitted
 #' plot(data.points[,1], data.points[,2],
 #' pch=20, col="grey",
 #' main="Principal Manifold Estimation",
@@ -63,12 +61,16 @@ manifold_fitting <- function(x, d, embedding_map) {
   u_initial = embedding_map(x, d)
   f = reconstruction_map(u_initial, x)
 
+  if(FALSE) {
   lower = sapply(c(1:d),function(i) {return(min(u_initial[,i]))})
   upper = sapply(c(1:d),function(i) {return(max(u_initial[,i]))})
   # projection
   u = matrix(t(sapply(c(1:n), function(i) {return(projection_func(x[i,],f,u_initial[i,],lower,upper))})),ncol=d)
-  ssd = sum((x-f(u))^2)
-  cat(paste0("The reconstruction consistency loss is ",round(ssd,5),".\n"))
+  }
+
+  x_hat = f(u_initial)
+  mse = mean(sqrt(rowSums((x-x_hat)^2)))
+  cat(paste0("The reconstruction consistency loss is ",round(mse,5),".\n"))
 
   if(FALSE) {
   # iteration
@@ -90,5 +92,5 @@ manifold_fitting <- function(x, d, embedding_map) {
     cat(paste0("The ",count,"-th iteration: ","the consistency loss is ",round(ssd,5),".\n"))
   }
   }
-  return(list(map=f,lower=lower,upper=upper))
+  return(list(map=f, u=u_initial, fitted=x_hat))
 }

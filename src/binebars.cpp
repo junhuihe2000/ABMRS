@@ -88,6 +88,9 @@ BinEBARS::BinEBARS(const Eigen::MatrixXd & _x, const Eigen::VectorXd & _y,
   Rcpp::List pars = surface_spline_regression(t,y,xi_1,xi_2,degree_1,degree_2,intercept_1,intercept_2);
   beta = Rcpp::as<Eigen::VectorXd>(pars["beta"]);
   sigma = pars["sigma"];
+
+  xis_1 = Rcpp::List::create();
+  xis_2 = Rcpp::List::create();
 }
 
 void BinEBARS::_initial() {
@@ -276,14 +279,23 @@ void BinEBARS::_update() {
 }
 
 void BinEBARS::rjmcmc(int burns, int steps) {
-  for(int i=0;i<burns+steps;i++) {
+  for(int i=0;i<burns;i++) {
     _update();
+  }
+  for(int i=0;i<steps;i++) {
+    _update();
+    xis_1.push_back(xi_1.array()*(xmax(0)-xmin(0)) + xmin(0));
+    xis_2.push_back(xi_2.array()*(xmax(1)-xmin(1)) + xmin(1));
   }
 }
 
 Rcpp::List BinEBARS::get_knots() {
   return Rcpp::List::create(Rcpp::Named("xi_1")=(xi_1.array()*(xmax(0)-xmin(0)) + xmin(0)),
                             Rcpp::Named("xi_2")=(xi_2.array()*(xmax(1)-xmin(1)) + xmin(1)));
+}
+
+Rcpp::List BinEBARS::get_samples() {
+ return Rcpp::List::create(Rcpp::Named("xi_1")=xis_1, Rcpp::Named("xi_2")=xis_2);
 }
 
 Eigen::VectorXd BinEBARS::predict(const Eigen::MatrixXd & x_new) {
@@ -306,6 +318,7 @@ RCPP_MODULE(class_BinEBARS) {
     .method("rjmcmc", &BinEBARS::rjmcmc, "reversible jump MCMC")
     .method("predict", &BinEBARS::predict, "predict by surface spline regression with EBARS")
     .method("knots", &BinEBARS::get_knots, "return estimated knots")
+    .method("samples", &BinEBARS::get_samples, "return posterior samples")
     ;
 }
 

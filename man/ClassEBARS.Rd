@@ -16,5 +16,7 @@ a class of \code{\link[=ebars]{ebars()}}
 \item{\code{predict}}{predict by spline regression with EBARS}
 
 \item{\code{knots}}{return estimated knots}
+
+\item{\code{samples}}{return posterior samples}
 }}
 

@@ -14,6 +14,7 @@
 //' @field rjmcmc reversible jump MCMC, a wrapper is `mcmc`
 //' @field predict predict by spline regression with EBARS
 //' @field knots return estimated knots
+//' @field samples return posterior samples
 class EBARS {
 private:
   int k; // the number of underlying knots
@@ -32,6 +33,7 @@ private:
   Eigen::VectorXd knots; // all knots
   Eigen::VectorXd xi; // selected knots
   Eigen::VectorXd remain_knots; // remaining knots
+  Rcpp::List xis; // posterior samples of selected knots
 
   Eigen::VectorXd beta; // estimated beta by MLE
   double sigma; // estimated sigma by MLE
@@ -55,10 +57,11 @@ public:
         Rcpp::IntegerVector _num = Rcpp::IntegerVector::create(-1,-1),
         Rcpp::List _spline = Rcpp::List::create(Rcpp::Named("degree") = 3,
                                                 Rcpp::Named("intercept") = false));
-  void rjmcmc(int burns = 500, int steps = 500, bool flush = false, int gap = 50); // reversible jump MCMC
+  void rjmcmc(int burns = 500, int steps = 500); // reversible jump MCMC
   // predict response values on x_new
   Eigen::VectorXd predict(const Eigen::VectorXd & x_new);
   Eigen::VectorXd get_knots(); // return estimated knots
+  Rcpp::List get_samples(); // return posterior samples
 };
 
 #endif

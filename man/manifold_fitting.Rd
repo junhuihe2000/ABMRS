@@ -18,8 +18,8 @@ return the embedding representation, a numeric matrix with dim(n,d).}
 a list including:
 \itemize{
 \item{\code{map}, the estimated reconstruction map.}
-\item{\code{lower}, the lower bound of covariates in \code{map}.}
-\item{\code{upper}, the upper bound of covariates in \code{map}.}
+\item{\code{u}, the manifold projection.}
+\item{\code{fitted}, the manifold estimation on \code{u}.}
 }
 }
 \description{
@@ -35,13 +35,11 @@ e1=rnorm(I,mean = 0, sd=sd.noise)
 e2=rnorm(I,mean = 0, sd=sd.noise)
 data.points=X+cbind(e1,e2)
 embedding_map <- function(x, d) {
-  u = vegan::isomap(stat::dist(x), ndim=d)$points
+  u = vegan::isomap(stats::dist(x), ndim=d, k = 10)$points
   return(u)
 }
 res = manifold_fitting(data.points,1,embedding_map)
-center = (res$lower+res$upper)/2
-radius = abs(res$upper-res$lower)/2
-x_test = res$map(seq(center-radius*0.95,center+radius*0.95,length.out=500))
+x_test = res$fitted
 plot(data.points[,1], data.points[,2],
 pch=20, col="grey",
 main="Principal Manifold Estimation",

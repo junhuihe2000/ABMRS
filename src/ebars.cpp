@@ -56,6 +56,8 @@ EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
   Rcpp::List pars = spline_regression(t, y, xi, degree, intercept);
   beta = Rcpp::as<Eigen::VectorXd>(pars["beta"]);
   sigma = pars["sigma"];
+
+  xis = Rcpp::List::create();
 }
 
 void EBARS::_initial() {
@@ -154,20 +156,15 @@ void EBARS::_update() {
   }
 }
 
-void EBARS::rjmcmc(int burns, int steps, bool flush, int gap) {
-  for(int i=0;i<burns+steps;i++) {
-    if(flush) {
-      if(i%gap==0) {
-        Rcpp::Rcout << "Step " << i << ", RSS = " << (std::pow(sigma,2)*m) << "\n";
-        Rcpp::Rcout << k << " knots: " << xi.transpose() << "\n";
-      }
-    }
+void EBARS::rjmcmc(int burns, int steps) {
+  // burns-in period
+  for(int i=0;i<burns;i++) {
     _update();
   }
-
-  if(flush) {
-    Rcpp::Rcout << "Step " << (burns+steps) << ", RSS = " << (std::pow(sigma,2)*m) << "\n";
-    Rcpp::Rcout << k << " knots: " << xi.transpose() << "\n";
+  // posterior samples of knots
+  for(int i=0;i<steps;i++) {
+    _update();
+    xis.push_back(xi.array()*(xmax-xmin) + xmin);
   }
 }
 
@@ -183,6 +180,9 @@ Eigen::VectorXd EBARS::get_knots() {
   return (xi.array()*(xmax-xmin) + xmin);
 }
 
+Rcpp::List EBARS::get_samples() {
+  return xis;
+}
 
 // expose Rcpp class
 RCPP_MODULE(class_EBARS) {
@@ -196,6 +196,7 @@ RCPP_MODULE(class_EBARS) {
   .method("rjmcmc", &EBARS::rjmcmc, "reversible jump MCMC")
   .method("predict", &EBARS::predict, "predict by spline regression with EBARS")
   .method("knots", &EBARS::get_knots, "return estimated knots")
+  .method("samples", &EBARS::get_samples, "return posterior samples")
   ;
 }
 

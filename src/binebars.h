@@ -15,6 +15,7 @@
 //' @field rjmcmc reversible jump MCMC, a wrapper is `mcmc`
 //' @field predict predict by surface spline regression with EBARS
 //' @field knots return estimated knots
+//' @field samples return posterior samples
 class BinEBARS {
 private:
   int k_1, k_2; // the number of underlying knots in the direction x_1 and x_2
@@ -33,6 +34,7 @@ private:
   Eigen::VectorXd knots_1, knots_2; // all knots
   Eigen::VectorXd xi_1, xi_2; // selected knots
   Eigen::VectorXd remain_knots_1, remain_knots_2; // remaining knots
+  Rcpp::List xis_1, xis_2; // posterior samples
 
   Eigen::VectorXd beta; // estimated beta by MLE
   double sigma; // estimated sigma by MLE
@@ -63,6 +65,7 @@ public:
   // predict response values on x_new
   Eigen::VectorXd predict(const Eigen::MatrixXd & x_new);
   Rcpp::List get_knots(); // return estimated knots
+  Rcpp::List get_samples(); // return posterior samples
 };
 
 

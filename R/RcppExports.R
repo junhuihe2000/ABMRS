@@ -9,6 +9,7 @@
 #' @field rjmcmc reversible jump MCMC, a wrapper is `mcmc`
 #' @field predict predict by surface spline regression with EBARS
 #' @field knots return estimated knots
+#' @field samples return posterior samples
 NULL
 
 #' @name ClassEBARS
@@ -19,6 +20,7 @@ NULL
 #' @field rjmcmc reversible jump MCMC, a wrapper is `mcmc`
 #' @field predict predict by spline regression with EBARS
 #' @field knots return estimated knots
+#' @field samples return posterior samples
 NULL
 
 #' create a bivariate tensor product spline basis matrix

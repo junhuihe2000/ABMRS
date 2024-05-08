@@ -50,8 +50,8 @@ ebars <- function(x, y, gamma = 1.0, c = 0.3, times = 3,
                   k = -1, n = -1, degree = 3, intercept = TRUE) {
   new_ebars = EBARS$new(x,y,c(gamma,c,times),c(k,n),list("degree"=degree,"intercept"=intercept))
   assign('mcmc',
-         function(burns = 500, steps = 500, flush = FALSE, gap = 50) {
-           new_ebars$rjmcmc(burns,steps,flush,gap)
+         function(burns = 500, steps = 500) {
+           new_ebars$rjmcmc(burns,steps)
          },
          envir = new_ebars)
   return(new_ebars)

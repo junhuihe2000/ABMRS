@@ -16,5 +16,7 @@ a class of \code{\link[=binebars]{binebars()}}
 \item{\code{predict}}{predict by surface spline regression with EBARS}
 
 \item{\code{knots}}{return estimated knots}
+
+\item{\code{samples}}{return posterior samples}
 }}
 
