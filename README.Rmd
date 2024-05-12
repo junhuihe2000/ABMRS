@@ -1,4 +1,6 @@
 ---
+author: 
+  - Junhui He, Department of Mathematical Sciences, Tsinghua University
 output: github_document
 ---
 
@@ -16,11 +18,14 @@ knitr::opts_chunk$set(
 # EBARS
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 The goal of EBARS is to implement the extended Bayesian adaptive regression spline algorithm of the article ***Extended Bayesian information criterion for multivariate spline knot inference***. In spline regression, the number and location of knots influence the performance and interpretability significantly. We propose a fully Bayesian approach for knot inference in multivariate spline regression. The knot inference is of interest in many problems, such as change point detection. We can estimate the knot number and location simultaneously and accurately by the proposed method in univariate or bivariate splines.
 
 We specify a prior on the knot number to take into account the complexity of the model space and derive an analytic formula in the normal model. In the non-normal cases, we utilize the extended Bayesian information criterion (EBIC) to approximate the posterior density. The samples are simulated in the space with differing dimensions via reversible jump Markov chain Monte Carlo (RJMCMC). Experiments demonstrate the splendid capability of the algorithm, especially in function fitting with jumping discontinuity.
+
+More examples refer to [exampleEBARS](https://github.com/junhuihe2000/exampleEBARS).
 
 ## Installation
 
@@ -33,31 +38,17 @@ devtools::install_github("junhuihe2000/EBARS")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+This is a basic example which shows you how to make knot inference:
 
-```{r data, fig.width=10.5, fig.height=3}
+1. Generate data
+
+```{r data, fig.dim=c(4,3), fig.dpi=1000, out.width="50%", fig.align='center'}
 library(EBARS)
 library(splines)
 library(ggplot2)
 library(ggpubr)
 
-f1 = function(x) {
-  knots = c(0.5)
-  beta = c(1,-1,1)
-  B = bs(x,knots=knots,degree=1,intercept=TRUE,Boundary.knots=c(0,1))
-  y = B%*%beta
-  return(y)
-}
-
-f2 = function(x) {
-  knots = c(0.3,0.7)
-  beta = c(2,-1,-2,-1)
-  B = bs(x,knots=knots,degree=1,intercept=TRUE,Boundary.knots=c(0,1))
-  y = B%*%beta
-  return(y)
-}
-
-f3 = function(x) {
+f = function(x) {
   knots = c(0.2,0.2,0.5,0.7)
   beta = c(0,-1,1,0,1,0)
   B = bs(x,knots=knots,degree=1,intercept=TRUE,Boundary.knots=c(0,1))
@@ -68,24 +59,30 @@ f3 = function(x) {
 set.seed(1234)
 m = 200
 x_train = runif(m,0,1)
-# case 1
-y_train_1 = f1(x_train)
-y_obs_1 = y_train_1 + rnorm(m,0,0.4)
-p1 = ggplot() + geom_point(aes(x_train,y_obs_1),size=0.6,col="red") + geom_line(aes(x_train,y_train_1)) + theme(axis.title.x=element_blank(),axis.title.y=element_blank())
-# case 2
-y_train_2 = f2(x_train)
-y_obs_2 = y_train_2 + rnorm(m,0,0.3)
-p2 = ggplot() + geom_point(aes(x_train,y_obs_2),size=0.6,col="red") + geom_line(aes(x_train,y_train_2)) + theme(axis.title.x=element_blank(),axis.title.y=element_blank())
-# case 3 
-y_train_3 = f3(x_train)
-y_obs_3 = y_train_3 + rnorm(m,0,0.4)
-p3 = ggplot() + geom_point(aes(x_train,y_obs_3),size=0.6,col="red") + geom_line(aes(x_train,y_train_3)) + theme(axis.title.x=element_blank(),axis.title.y=element_blank())
 
-# arrange in one page
-annotate_figure(ggarrange(p1,p2,p3,ncol=3), top="Linear splines with one, two and four knots")
+y_train = f(x_train)
+y_obs = y_train + rnorm(m,0,0.4)
+p = ggplot() + geom_point(aes(x_train,y_obs),size=0.6,col="red") + geom_line(aes(x_train,y_train)) + theme(axis.title.x=element_blank(),axis.title.y=element_blank())
+
+annotate_figure(p, top="Linear splines with four knots")
 ```
 
-```{r, echo=FALSE, fig.cap="Linear splines with one, two and four knots."}
-knitr::include_graphics("inst/figures/knot_estimation.pdf")
-```
+2. Knot inference
 
+```{r inference, fig.dim=c(8,3), fig.dpi=1000}
+set.seed(1234)
+
+m = 500; sd = 0.4
+x = runif(m)
+y = f(x) + rnorm(m,0,sd)
+# EBARS
+ebars = ebars(x,y,gamma=1,c=0.3,n=1000,degree=1,intercept=TRUE)
+ebars$mcmc(burns=5000,steps=5000)
+samples = ebars$samples()
+nums = sapply(samples, function(xi) {return(length(xi))})
+points = unlist(samples)
+p1 = ggplot(mapping=aes(x=nums)) + geom_bar(aes(y=after_stat(prop))) + ylab("") + xlab("") + geom_vline(aes(xintercept=mean(nums)), color="red", linetype="dashed") + scale_x_continuous(breaks=seq(min(nums),max(nums)),labels=seq(min(nums),max(nums)))
+p2 = ggplot(mapping=aes(x=points)) + geom_density(adjust=1) + ylab("") + xlab("")
+
+annotate_figure(ggarrange(p1,p2,ncol=2,nrow=1,align="hv"),top="The posterior distribution of knots by EBARS")
+```

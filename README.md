@@ -1,3 +1,4 @@
+Junhui He, Department of Mathematical Sciences, Tsinghua University
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -26,6 +27,9 @@ reversible jump Markov chain Monte Carlo (RJMCMC). Experiments
 demonstrate the splendid capability of the algorithm, especially in
 function fitting with jumping discontinuity.
 
+More examples refer to
+[exampleEBARS](https://github.com/junhuihe2000/exampleEBARS).
+
 ## Installation
 
 You can install the development version of EBARS from
@@ -38,7 +42,9 @@ devtools::install_github("junhuihe2000/EBARS")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+This is a basic example which shows you how to make knot inference:
+
+1.  Generate data
 
 ``` r
 library(EBARS)
@@ -46,23 +52,7 @@ library(splines)
 library(ggplot2)
 library(ggpubr)
 
-f1 = function(x) {
-  knots = c(0.5)
-  beta = c(1,-1,1)
-  B = bs(x,knots=knots,degree=1,intercept=TRUE,Boundary.knots=c(0,1))
-  y = B%*%beta
-  return(y)
-}
-
-f2 = function(x) {
-  knots = c(0.3,0.7)
-  beta = c(2,-1,-2,-1)
-  B = bs(x,knots=knots,degree=1,intercept=TRUE,Boundary.knots=c(0,1))
-  y = B%*%beta
-  return(y)
-}
-
-f3 = function(x) {
+f = function(x) {
   knots = c(0.2,0.2,0.5,0.7)
   beta = c(0,-1,1,0,1,0)
   B = bs(x,knots=knots,degree=1,intercept=TRUE,Boundary.knots=c(0,1))
@@ -73,30 +63,34 @@ f3 = function(x) {
 set.seed(1234)
 m = 200
 x_train = runif(m,0,1)
-# case 1
-y_train_1 = f1(x_train)
-y_obs_1 = y_train_1 + rnorm(m,0,0.4)
-p1 = ggplot() + geom_point(aes(x_train,y_obs_1),size=0.6,col="red") + geom_line(aes(x_train,y_train_1)) + theme(axis.title.x=element_blank(),axis.title.y=element_blank())
-# case 2
-y_train_2 = f2(x_train)
-y_obs_2 = y_train_2 + rnorm(m,0,0.3)
-p2 = ggplot() + geom_point(aes(x_train,y_obs_2),size=0.6,col="red") + geom_line(aes(x_train,y_train_2)) + theme(axis.title.x=element_blank(),axis.title.y=element_blank())
-# case 3 
-y_train_3 = f3(x_train)
-y_obs_3 = y_train_3 + rnorm(m,0,0.4)
-p3 = ggplot() + geom_point(aes(x_train,y_obs_3),size=0.6,col="red") + geom_line(aes(x_train,y_train_3)) + theme(axis.title.x=element_blank(),axis.title.y=element_blank())
 
-# arrange in one page
-annotate_figure(ggarrange(p1,p2,p3,ncol=3), top="Linear splines with one, two and four knots")
+y_train = f(x_train)
+y_obs = y_train + rnorm(m,0,0.4)
+p = ggplot() + geom_point(aes(x_train,y_obs),size=0.6,col="red") + geom_line(aes(x_train,y_train)) + theme(axis.title.x=element_blank(),axis.title.y=element_blank())
+
+annotate_figure(p, top="Linear splines with four knots")
 ```
 
-<img src="man/figures/README-data-1.png" width="100%" />
+<img src="man/figures/README-data-1.png" width="50%" style="display: block; margin: auto;" />
 
-<div class="figure">
+2.  Knot inference
 
-<embed src="inst/figures/knot_estimation.pdf" title="Linear splines with one, two and four knots." width="100%" type="application/pdf" />
-<p class="caption">
-Linear splines with one, two and four knots.
-</p>
+``` r
+set.seed(1234)
 
-</div>
+m = 500; sd = 0.4
+x = runif(m)
+y = f(x) + rnorm(m,0,sd)
+# EBARS
+ebars = ebars(x,y,gamma=1,c=0.3,n=1000,degree=1,intercept=TRUE)
+ebars$mcmc(burns=5000,steps=5000)
+samples = ebars$samples()
+nums = sapply(samples, function(xi) {return(length(xi))})
+points = unlist(samples)
+p1 = ggplot(mapping=aes(x=nums)) + geom_bar(aes(y=after_stat(prop))) + ylab("") + xlab("") + geom_vline(aes(xintercept=mean(nums)), color="red", linetype="dashed") + scale_x_continuous(breaks=seq(min(nums),max(nums)),labels=seq(min(nums),max(nums)))
+p2 = ggplot(mapping=aes(x=points)) + geom_density(adjust=1) + ylab("") + xlab("")
+
+annotate_figure(ggarrange(p1,p2,ncol=2,nrow=1,align="hv"),top="The posterior distribution of knots by EBARS")
+```
+
+<img src="man/figures/README-inference-1.png" width="100%" />
