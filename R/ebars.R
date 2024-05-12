@@ -4,6 +4,4 @@
 #' @importFrom splines bs
 #' @importFrom methods new
 #' @importFrom stats optim
-#' @importFrom stats dist
-#' @importFrom vegan isomap
 NULL

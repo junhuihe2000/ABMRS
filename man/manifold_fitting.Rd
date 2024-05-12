@@ -35,7 +35,7 @@ e1=rnorm(I,mean = 0, sd=sd.noise)
 e2=rnorm(I,mean = 0, sd=sd.noise)
 data.points=X+cbind(e1,e2)
 embedding_map <- function(x, d) {
-  u = vegan::isomap(stats::dist(x), ndim=d, k = 10)$points
+  u = stats::princomp(x)$scores[,1,drop=FALSE]
   return(u)
 }
 res = manifold_fitting(data.points,1,embedding_map)

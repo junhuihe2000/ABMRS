@@ -1,9 +1,13 @@
 Package: EBARS
-Title: Extended BIC for Bayesian spline knot selection
+Title: Extended Bayesian information criterion for multivariate spline knot inference
 Version: 0.0.0.9000
 Authors@R: 
     person("Junhui", "He", , "hejh22@mails.tsinghua.edu.cn", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Description: An algorithm for extended Bayesian adaptive regression splines. 
+  We propose a fully Bayesian approach for knot inference in multivariate spline regression. 
+  The knot inference is of interest in many problems, such as change point detection. 
+  You can estimate the knot number and location simultaneously and accurately 
+  by the proposed method in univariate or bivariate splines.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -16,8 +20,7 @@ Imports:
     RcppEigen,
     splines,
     methods,
-    stats,
-    vegan
+    stats
 LinkingTo:
     Rcpp,
     RcppEigen
