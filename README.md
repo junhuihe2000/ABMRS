@@ -37,7 +37,7 @@ You can install the development version of EBARS from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("junhuihe2000/EBARS")
+devtools::install_github("junhuihe2000/ABMRS")
 ```
 
 ## Example
