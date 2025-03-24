@@ -350,3 +350,46 @@ scatter3D(x.ebars[,1], x.ebars[,2], x.ebars[,3],
           main="")
 ```
 
+```{r}
+library(splines)
+set.seed(1234)
+#tensor spline
+beta = matrix(rnorm(200,0,1),ncol=1)
+xix = c(0.2,0.3)
+xiy = c(0.5,0.5,0.5,0.5,0.7)
+xiz = c(0.4,0.6)
+fss <- function(x,y,z){
+B = tri_tensor_spline(cbind(x,y,z),xix,xiy,xiz)
+return(B%*%beta)
+}
+```
+
+```{r}
+# parameters' configuration
+m_train = 1000; m_test = 200
+burns = 1000; steps = 1000
+noise = 0.1
+# generate train data set
+x_1 = c(runif(m_train-2,0,1),0,1)
+x_2 = c(runif(m_train-2,0,1),0,1)
+x_3 = c(runif(m_train-2,0,1),0,1)
+y = fss(x_1,x_2,x_3)
+y_h = y + rnorm(m_train,0,noise)
+# generate test set
+x_1_new = runif(m_test,0,1)
+x_2_new = runif(m_test,0,1)
+x_3_new = runif(m_test,0,1)
+y_new = fss(x_1_new,x_2_new,x_3_new)
+```
+
+```{r}
+# run cube EBARS
+time_start = Sys.time()
+my_triebars = triebars(cbind(x_1,x_2,x_3), y_h, k_1 = 2, k_2 = 5, k_3 = 2)
+my_triebars$mcmc(10,10)
+time_end = Sys.time()
+time_end - time_start
+y_hat = my_triebars$predict(cbind(x_1_new,x_2_new,x_3_new))
+sum((y_new-y_hat)^2)/m_test
+```
+

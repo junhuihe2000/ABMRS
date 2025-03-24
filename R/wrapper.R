@@ -135,3 +135,169 @@ binebars <- function(x, y, gamma = 1.0, c = 0.3, times_1 = 3, times_2 = 3,
          envir = new_binebars)
   return(new_binebars)
 }
+
+
+#' create an instance of BinEBARS
+#' @description
+#' see [ClassBinEBARS] for more details about class BinEBARS
+#'
+#'
+#' @param x a numeric matrix, (m,2), each row indicates a predictor value (x_1,x_2).
+#' @param y a numeric vector, indicates the response values,
+#' the same length as x's rows.
+#' @param gamma double, the exponent in extended BIC, default value is `1.0`.
+#' It should be contained in `[0,1]` (Nevertheless, outside is valid).
+#' @param c double, the constant affects the proposal distribution in MCMC,
+#' default value is `0.3`. It has to be contained in `[0,1]`.
+#' @param times_1 double, decides the number of all potential knots in x_1 if `n_1<0`.
+#' In this case, `n_1` is `length(x) * times`, default value is `3.0`.
+#' @param times_2 double, similar to `times_1` but in x_2, default value is `3.0`.
+#' @param k_1 int, the number of knots in x_1 is fixed if `k_1>0`. Otherwise `k_1` will
+#' be estimated in the algorithm, default value is `-1`.
+#' @param k_2 int, the number of knots in x_2 is fixed if `k_2>0`. Otherwise `k_2` will
+#' be estimated in the algorithm, default value is `-1`.
+#' @param n_1 int, the number of all potential knots in x_1, default value is `-1`.
+#' @param n_2 int, similar to `n_1` but in x_2, default value is `-1`.
+#' @param degree_1 int, the degree of polynomial spline in x_1, default value is `3`.
+#' @param degree_2 int, the degree of polynomial spline in x_2, default value is `3`.
+#' @param intercept_1 bool, whether the intercept is included in the basis in x_1,
+#' default value is `TRUE`.
+#' @param intercept_2 bool, whether the intercept is included in the basis in x_2,
+#' default value is `TRUE`.
+#' @returns an exposed R class of cpp class called BinEBARS.
+#' @export
+#' @examples
+#' library(EBARS)
+#' library(splines)
+#' set.seed(1234)
+#' #tensor spline
+#' beta = matrix(rnorm(40,0,1),ncol=1)
+#' fss <- function(x,y){
+#'   xix = c(0.2,0.3)
+#'   xiy = c(0.5,0.5,0.5,0.5,0.7)
+#'   B = tensor_spline(cbind(x,y),xix,xiy)
+#'   return(B%*%beta)
+#' }
+#' # parameters' configuration
+#' m_train = 1000; m_test = 200
+#' burns = 1000; steps = 1000
+#' noise = 0.1
+#' # generate train data set
+#' x_1 = c(runif(m_train-2,0,1),0,1)
+#' x_2 = c(runif(m_train-2,0,1),0,1)
+#' y = fss(x_1,x_2)
+#' y_h = y + rnorm(m_train,0,noise)
+#' # generate test set
+#' x_1_new = runif(m_test,0,1)
+#' x_2_new = runif(m_test,0,1)
+#' y_new = fss(x_1_new,x_2_new)
+#' # run suface EBARS
+#' time_start = Sys.time()
+#' my_binebars = binebars(cbind(x_1,x_2), y_h)
+#' my_binebars$mcmc(10,10)
+#' time_end = Sys.time()
+#' time_end - time_start
+#' y_hat = my_binebars$predict(cbind(x_1_new,x_2_new))
+#' sum((y_new-y_hat)^2)/m_test
+#'
+binebars <- function(x, y, gamma = 1.0, c = 0.3, times_1 = 3, times_2 = 3,
+                     k_1 = -1, k_2 = -1, n_1 = -1, n_2 = -1,
+                     degree_1 = 3, degree_2 = 3, intercept_1 = TRUE, intercept_2 = TRUE) {
+  stopifnot("x must be an (m,2) matrix"=ncol(x)==2)
+  new_binebars = BinEBARS$new(x,y,c(gamma,c,times_1,times_2),c(k_1,k_2,n_1,n_2),
+                              list("degree_1"=degree_1,"degree_2"=degree_2,"intercept_1"=intercept_1,"intercept_2"=intercept_2))
+  assign('mcmc',
+         function(burns = 100, steps = 100) {
+           new_binebars$rjmcmc(burns,steps)
+         },
+         envir = new_binebars)
+  return(new_binebars)
+}
+
+
+#' create an instance of TriEBARS
+#' @description
+#' see [ClassTriEBARS] for more details about class TriEBARS
+#'
+#'
+#' @param x a numeric matrix, (m,3), each row indicates a predictor value (x_1,x_2,x_3).
+#' @param y a numeric vector, indicates the response values,
+#' the same length as x's rows.
+#' @param gamma double, the exponent in extended BIC, default value is `1.0`.
+#' It should be contained in `[0,1]` (Nevertheless, outside is valid).
+#' @param c double, the constant affects the proposal distribution in MCMC,
+#' default value is `0.3`. It has to be contained in `[0,1]`.
+#' @param times_1 double, decides the number of all potential knots in x_1 if `n_1<0`.
+#' In this case, `n_1` is `length(x) * times`, default value is `3.0`.
+#' @param times_2 double, similar to `times_1` but in x_2, default value is `3.0`.
+#' @param times_3 double, similar to `times_1` but in x_3, default value is `3.0`.
+#' @param k_1 int, the number of knots in x_1 is fixed if `k_1>0`. Otherwise `k_1` will
+#' be estimated in the algorithm, default value is `-1`.
+#' @param k_2 int, the number of knots in x_2 is fixed if `k_2>0`. Otherwise `k_2` will
+#' be estimated in the algorithm, default value is `-1`.
+#' @param k_3 int, the number of knots in x_3 is fixed if `k_3>0`. Otherwise `k_3` will
+#' be estimated in the algorithm, default value is `-1`.
+#' @param n_1 int, the number of all potential knots in x_1, default value is `-1`.
+#' @param n_2 int, similar to `n_1` but in x_2, default value is `-1`.
+#' @param n_3 int, similar to `n_1` but in x_3, default value is `-1`.
+#' @param degree_1 int, the degree of polynomial spline in x_1, default value is `3`.
+#' @param degree_2 int, the degree of polynomial spline in x_2, default value is `3`.
+#' @param degree_3 int, the degree of polynomial spline in x_3, default value is `3`.
+#' @param intercept_1 bool, whether the intercept is included in the basis in x_1,
+#' default value is `TRUE`.
+#' @param intercept_2 bool, whether the intercept is included in the basis in x_2,
+#' default value is `TRUE`.
+#' @param intercept_3 bool, whether the intercept is included in the basis in x_3,
+#' default value is `TRUE`.
+#' @returns an exposed R class of cpp class called TriEBARS.
+#' @export
+#' @examples
+#' library(EBARS)
+#' library(splines)
+#' set.seed(1234)
+#' #tensor spline
+#' beta = matrix(rnorm(200,0,1),ncol=1)
+#' fss <- function(x,y,z){
+#'   xix = c(0.2,0.3)
+#'   xiy = c(0.5,0.5,0.5,0.5,0.7)
+#'   xiz = c(0.4,0.6)
+#'   B = tri_tensor_spline(cbind(x,y,z),xix,xiy,xiz)
+#'   return(B%*%beta)
+#' }
+#' # parameters' configuration
+#' m_train = 1000; m_test = 200
+#' burns = 1000; steps = 1000
+#' noise = 0.1
+#' # generate train data set
+#' x_1 = c(runif(m_train-2,0,1),0,1)
+#' x_2 = c(runif(m_train-2,0,1),0,1)
+#' x_3 = c(runif(m_train-2,0,1),0,1)
+#' y = fss(x_1,x_2,x_3)
+#' y_h = y + rnorm(m_train,0,noise)
+#' # generate test set
+#' x_1_new = runif(m_test,0,1)
+#' x_2_new = runif(m_test,0,1)
+#' x_3_new = runif(m_test,0,1)
+#' y_new = fss(x_1_new,x_2_new,x_3_new)
+#' # run cube EBARS
+#' time_start = Sys.time()
+#' my_triebars = triebars(cbind(x_1,x_2,x_3), y_h)
+#' my_triebars$mcmc(10,10)
+#' time_end = Sys.time()
+#' time_end - time_start
+#' y_hat = my_triebars$predict(cbind(x_1_new,x_2_new,x_3_new))
+#' sum((y_new-y_hat)^2)/m_test
+#'
+triebars <- function(x, y, gamma = 1.0, c = 0.3, times_1 = 3, times_2 = 3, times_3 = 3,
+                     k_1 = -1, k_2 = -1, k_3 = -1, n_1 = -1, n_2 = -1, n_3 = -1,
+                     degree_1 = 3, degree_2 = 3, degree_3 = 3, intercept_1 = TRUE, intercept_2 = TRUE, intercept_3 = TRUE) {
+  stopifnot("x must be an (m,3) matrix"=ncol(x)==3)
+  new_triebars = TriEBARS$new(x,y,c(gamma,c,times_1,times_2,times_3),c(k_1,k_2,k_3,n_1,n_2,n_3),
+                              list("degree_1"=degree_1,"degree_2"=degree_2,"degree_3"=degree_3,"intercept_1"=intercept_1,"intercept_2"=intercept_2,"intercept_3"=intercept_3))
+  assign('mcmc',
+         function(burns = 100, steps = 100) {
+           new_triebars$rjmcmc(burns,steps)
+         },
+         envir = new_triebars)
+  return(new_triebars)
+}

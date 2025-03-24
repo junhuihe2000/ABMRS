@@ -23,6 +23,17 @@ NULL
 #' @field samples return posterior samples
 NULL
 
+#' @name ClassTriEBARS
+#' @title trivariate extended Bayesian adaptive regression spline
+#' @description a class of [triebars()]
+#'
+#' @field new constructor, see `triebars`
+#' @field rjmcmc reversible jump MCMC, a wrapper is `mcmc`
+#' @field predict predict by trivariate spline regression with EBARS
+#' @field knots return estimated knots
+#' @field samples return posterior samples
+NULL
+
 #' create a bivariate tensor product spline basis matrix
 #' @param x a numeric matrix, (m,2), each row indicates a predictor value (x_1,x_2).
 #' @param xi_1 a numeric vector, indicates `k_1` knots in x_1.
@@ -39,5 +50,27 @@ NULL
 #' @export
 tensor_spline <- function(x, xi_1, xi_2, degree_1 = 3L, degree_2 = 3L, intercept_1 = FALSE, intercept_2 = FALSE) {
     .Call(`_EBARS_tensor_spline`, x, xi_1, xi_2, degree_1, degree_2, intercept_1, intercept_2)
+}
+
+#' create a trivariate tensor product spline basis matrix
+#' @param x a numeric matrix, (m,3), each row indicates a predictor value (x_1,x_2,x_3).
+#' @param xi_1 a numeric vector, indicates `k_1` knots in x_1.
+#' @param xi_2 a numeric vector, indicates `k_2` knots in x_2
+#' @param xi_3 a numeric vector, indicates `k_3` knots in x_3
+#' @param degree_1 int, the degree of polynomial in x_1, default value is `3`.
+#' @param degree_2 int, the degree of polynomial in x_2, default value is `3`.
+#' @param degree_3 int, the degree of polynomial in x_3, default value is `3`.
+#' @param intercept_1 bool, whether the intercept is included in the basis in x_1,
+#' default value is `FALSE`.
+#' @param intercept_2 bool, whether the intercept is included in the basis in x_2,
+#' default value is `FALSE`.
+#' @param intercept_3 bool, whether the intercept is included in the basis in x_3,
+#' default value is `FALSE`.
+#'
+#' @returns a trivariate tensor product spline basis matrix.
+#'
+#' @export
+tri_tensor_spline <- function(x, xi_1, xi_2, xi_3, degree_1 = 3L, degree_2 = 3L, degree_3 = 3L, intercept_1 = FALSE, intercept_2 = FALSE, intercept_3 = FALSE) {
+    .Call(`_EBARS_tri_tensor_spline`, x, xi_1, xi_2, xi_3, degree_1, degree_2, degree_3, intercept_1, intercept_2, intercept_3)
 }
 
