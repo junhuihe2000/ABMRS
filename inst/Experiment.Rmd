@@ -30,6 +30,25 @@ void testcpp() {
 }
 ```
 
+
+```{r}
+Rcpp::sourceCpp(code='
+// [[Rcpp::depends(RcppEigen)]]
+#include <RcppEigen.h>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+
+// [[Rcpp::export(testcpp)]]
+void testcpp() {
+  Rcpp::List l = Rcpp::List::create();
+  cout << l.length() << endl;
+}
+')
+```
+
+
+
 + curve fitting
 
 ```{r}
