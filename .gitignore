@@ -4,3 +4,6 @@
 .httr-oauth
 .DS_Store
 .quarto
+
+# VS Code settings
+.vscode/
