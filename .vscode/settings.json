@@ -1,0 +1,68 @@
+{
+    // ═══════════════════════════════════════════════════════════
+    // R 语言配置
+    // ═══════════════════════════════════════════════════════════
+    "r.rterm.windows": "E:\\R\\R-4.4.2\\bin\\x64\\R.exe",
+    "r.rpath.windows": "E:\\R\\R-4.4.2\\bin\\x64\\R.exe",
+    "r.bracketedPaste": false,
+    "r.alwaysUseActiveTerminal": false,
+    "r.sessionWatcher": true,
+    "r.plot.useHttpgd": true,
+    
+    // R LSP 配置
+    "r.lsp.enabled": true,
+    "r.lsp.debug": false,
+    "r.lsp.diagnostics": true,
+    "r.lsp.path": "E:\\R\\R-4.4.2\\bin\\x64\\R.exe",
+    
+    // C/C++ 配置 (用于 Rcpp)
+    "C_Cpp.default.compilerPath": "C:/rtools44/x86_64-w64-mingw32.static.posix/bin/g++.exe",
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.cStandard": "c17",
+    "C_Cpp.default.intelliSenseMode": "windows-gcc-x64",
+    
+    // 文件关联
+    "files.associations": {
+        "*.R": "r",
+        "*.Rmd": "rmd",
+        "*.cpp": "cpp",
+        "*.h": "cpp",
+        "*.hpp": "cpp",
+        "DESCRIPTION": "r-dcf",
+        "NAMESPACE": "r-namespace"
+    },
+    
+    // 编辑器配置
+    "editor.formatOnSave": false,
+    "editor.tabSize": 2,
+    "[r]": {
+        "editor.tabSize": 2,
+        "editor.wordWrap": "on"
+    },
+    "[cpp]": {
+        "editor.tabSize": 4
+    },
+    
+    // 终端配置
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+    
+    // 添加 R 和 Rtools 到终端 PATH
+    "terminal.integrated.env.windows": {
+        "PATH": "E:\\R\\R-4.4.2\\bin\\x64;C:\\rtools44\\x86_64-w64-mingw32.static.posix\\bin;C:\\rtools44\\usr\\bin;${env:PATH}"
+    },
+    
+    // ═══════════════════════════════════════════════════════════
+    // GitHub Copilot 配置
+    // ═══════════════════════════════════════════════════════════
+    "github.copilot.enable": {
+        "*": true,
+        "r": true,
+        "rmd": true,
+        "quarto": true,
+        "cpp": true,
+        "c": true,
+        "markdown": true,
+        "yaml": true,
+        "plaintext": true
+    }
+}
