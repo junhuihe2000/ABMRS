@@ -33,10 +33,15 @@ private:
   Eigen::VectorXd knots; // all knots
   Eigen::VectorXd xi; // selected knots
   Eigen::VectorXd remain_knots; // remaining knots
-  Rcpp::List xis; // posterior samples of selected knots
 
-  Eigen::VectorXd beta; // estimated beta by MLE
-  double sigma; // estimated sigma by MLE
+  Rcpp::List xis; // posterior samples of selected knots
+  Rcpp::List betas; // posterior samples of regression coefficients
+  Rcpp::List sigmas; // posterior samples of residual standard deviation
+
+  Eigen::VectorXd beta_mle; // estimated beta by MLE
+  double sigma_mle; // estimated residual standard deviation by MLE
+  Eigen::LLT<Eigen::MatrixXd> llt; // Cholesky decomposition used in Bayesian inference
+  Eigen::VectorXd beta; // posterior regression coefficients by Bayesian inference
 
 
   // compute probabilities of the next movement type
@@ -47,7 +52,7 @@ private:
   void _knots(); // create equally-spaced knot locations
   void _initial(); // initialize
 
-  bool _jump(); // one possible jump, may be rejected
+  // bool _jump(); // one possible jump, may be rejected
   void _update(); // one step movement in RJMCMC
 
 public:
@@ -59,9 +64,10 @@ public:
                                                 Rcpp::Named("intercept") = false));
   void rjmcmc(int burns = 500, int steps = 500); // reversible jump MCMC
   // predict response values on x_new
-  Eigen::VectorXd predict(const Eigen::VectorXd & x_new);
-  Eigen::VectorXd get_knots(); // return estimated knots
-  Rcpp::List get_samples(); // return posterior samples
+  Eigen::MatrixXd predict(const Eigen::VectorXd & x_new);
+  Rcpp::List get_knots(); // return posterior knot samples
+  Rcpp::List get_coefs(); // return posterior regression coefficients samples
+  Rcpp::List get_resids(); // return posterior residual standard deviation samples
 };
 
 #endif

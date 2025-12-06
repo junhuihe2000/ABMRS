@@ -5,7 +5,11 @@
 #include <RcppEigen.h>
 
 
-// estimate beta and sigma in the spline regression by least square estimation
+// estimate beta and sigma in the univariate spline regression by least square estimation
+Rcpp::List mle_regression_uni(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
+                              const Eigen::VectorXd & xi,
+                              int degree = 3, bool intercept = false);
+
 Rcpp::List spline_regression(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
                              const Eigen::VectorXd & xi,
                              int degree = 3, bool intercept = false);
