@@ -16,7 +16,8 @@ library(ggplot2)
 library(plot3D)
 ```
 
-```{Rcpp}
+```{r}
+Rcpp::sourceCpp(code='
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
 #include <iostream>
@@ -28,6 +29,7 @@ void testcpp() {
   Rcpp::List l = Rcpp::List::create();
   cout << l.length() << endl;
 }
+')
 ```
 
 
@@ -78,7 +80,7 @@ ggplot() + geom_point(aes(x,y_h))
 
 ```{r}
 time_start = Sys.time()
-a = ebars(x,y_h,intercept = F)
+a = ebars(x,y_h,intercept = FALSE)
 a$mcmc()
 time_end = Sys.time()
 print(time_end-time_start)
@@ -99,6 +101,7 @@ points = unlist(samples)
 ```{r}
 ggplot(mapping=aes(x=nums)) + geom_histogram(binwidth = 0.5)
 ```
+
 ```{r}
 ggplot(mapping=aes(x=nums)) + geom_bar(aes(y=after_stat(prop))) + scale_x_continuous(breaks=seq(5,10),labels=seq(5,10))
 ```

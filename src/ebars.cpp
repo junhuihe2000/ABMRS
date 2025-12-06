@@ -53,11 +53,23 @@ EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
   _knots();
   _initial();
   // maximum likelihood estimation
-  Rcpp::List pars = spline_regression(t, y, xi, degree, intercept);
-  beta = Rcpp::as<Eigen::VectorXd>(pars["beta"]);
-  sigma = pars["sigma"];
+  // Rcpp::List pars = spline_regression(t, y, xi, degree, intercept);
+  // beta = Rcpp::as<Eigen::VectorXd>(pars["beta"]);
+  // sigma = pars["sigma"];
+  Rcpp::List mle = mle_regression_uni(t, y, xi, degree, intercept);
+  beta_mle = Rcpp::as<Eigen::VectorXd>(mle["beta"]);
+  sigma_mle = mle["sigma"];
+  llt = Rcpp::as<Eigen::LLT<Eigen::MatrixXd>>(mle["llt"]);
+  // sample beta from posterior
+  double shrink_factor = m / (m + 1.0);
+  Eigen::VectorXd beta_mean = shrink_factor * beta_mle;
+  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(m));
+  beta = beta_mean + shrink_factor * sigma_mle * llt.matrixU().solve(z);
+  
 
   xis = Rcpp::List::create();
+  betas = Rcpp::List::create();
+  sigmas = Rcpp::List::create();
 }
 
 void EBARS::_initial() {
@@ -78,12 +90,14 @@ void EBARS::_initial() {
   }
 }
 
-bool EBARS::_jump() {
+// Metropolis-Hastings update
+void EBARS::_update() {
   double type = Rcpp::runif(1, 0.0, 1.0)[0];
   double birth = _birth();
   double death = _death();
-  // when k = 0, relocation does no update
-  if(k==0 && type>=birth) {return true;}
+  // when k = 0, only birth is allowed
+  if(k==0) {type = 0.0;}
+  // when k is fixed, only relocate is allowed
   if(fix_k) {birth = 0.0; death = 0.0;}
 
   Eigen::VectorXd xi_new, remain_new;
@@ -124,27 +138,33 @@ bool EBARS::_jump() {
   }
 
   // compute MLE
-  Rcpp::List pars_new = spline_regression(t,y,xi_new,degree,intercept);
-  Eigen::VectorXd beta_new = Rcpp::as<Eigen::VectorXd>(pars_new["beta"]);
-  double sigma_new = pars_new["sigma"];
+  // Rcpp::List pars_new = spline_regression(t,y,xi_new,degree,intercept);
+  Rcpp::List mle_new = mle_regression_uni(t, y, xi_new, degree, intercept);
+  Eigen::VectorXd beta_mle_new = Rcpp::as<Eigen::VectorXd>(mle_new["beta"]);
+  double sigma_mle_new = mle_new["sigma"];
+  Eigen::LLT<Eigen::MatrixXd> llt_new = Rcpp::as<Eigen::LLT<Eigen::MatrixXd>>(mle_new["llt"]);
 
   // compute marginal likelihood ratio: m^((k-k')/2)*(RSS_k/RSS_k')^(m/2)
-  double like_ratio = std::pow(m, (k-k_new)/2.0) * std::pow(sigma/sigma_new, m);
+  double like_ratio = std::pow(m, (k-k_new)/2.0) * std::pow(sigma_mle/sigma_mle_new, m);
 
-  // compute accept probability
-  double acc_prob = like_ratio;
+  // compute acceptance probability
+  double acc_prob = (k > 0) ? like_ratio : birth * like_ratio;
 
-  // decide whether to move
-  double acc = Rcpp::runif(1, 0.0, 1.0)[0];
-  if(acc < acc_prob) {
+  // decide whether to accept the new state
+  double acc_criteria = Rcpp::runif(1, 0.0, 1.0)[0];
+  if(acc_criteria < acc_prob) {
     k = k_new; xi = xi_new; remain_knots = remain_new;
-    beta = beta_new; sigma = sigma_new;
-    return true;
-  } else {
-    return false;
+    beta_mle = beta_mle_new; sigma_mle = sigma_mle_new; llt = llt_new;
   }
+
+  // sample beta from posterior
+  double shrink_factor = m / (m + 1.0);
+  Eigen::VectorXd beta_mean = shrink_factor * beta_mle;
+  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(m));
+  beta = beta_mean + shrink_factor * sigma_mle * llt.matrixU().solve(z);
 }
 
+/*
 void EBARS::_update() {
   bool state = false;
   int max_iter = 100;
@@ -155,6 +175,7 @@ void EBARS::_update() {
     }
   }
 }
+*/
 
 void EBARS::rjmcmc(int burns, int steps) {
   // burns-in period
@@ -165,23 +186,38 @@ void EBARS::rjmcmc(int burns, int steps) {
   for(int i=0;i<steps;i++) {
     _update();
     xis.push_back(xi.array()*(xmax-xmin) + xmin);
+    betas.push_back(beta);
+    sigmas.push_back(sigma_mle);
   }
 }
 
-Eigen::VectorXd EBARS::predict(const Eigen::VectorXd & x_new) {
+Eigen::MatrixXd EBARS::predict(const Eigen::VectorXd & x_new) {
   // transform x_new to t_new
   Eigen::VectorXd t_new = (x_new.array()-xmin)/(xmax-xmin);
-  // predict
-  Eigen::VectorXd y_new = spline_predict(t_new, xi, beta, degree, intercept);
-  return y_new;
+  // predict for new data using each posterior sample
+  Eigen::MatrixXd predictions(t_new.size(), xis.length());
+  for(int i=0;i<xis.length();i++) {
+    Eigen::VectorXd xi_sample = Rcpp::as<Eigen::VectorXd>(xis[i]);
+    Eigen::VectorXd beta_sample = Rcpp::as<Eigen::VectorXd>(betas[i]);
+    Eigen::VectorXd y_pred = spline_predict(t_new, xi_sample, beta_sample, degree, intercept);
+    predictions.col(i) = y_pred;
+  }
+  return predictions;
+
+  // Eigen::VectorXd y_new = spline_predict(t_new, xi, beta, degree, intercept);
+  // return y_new;
 }
 
-Eigen::VectorXd EBARS::get_knots() {
-  return (xi.array()*(xmax-xmin) + xmin);
-}
-
-Rcpp::List EBARS::get_samples() {
+Rcpp::List EBARS::get_knots() {
   return xis;
+}
+
+Rcpp::List EBARS::get_coefs() {
+  return betas;
+}
+
+Rcpp::List EBARS::get_resids() {
+  return sigmas;
 }
 
 // expose Rcpp class
@@ -194,9 +230,10 @@ RCPP_MODULE(class_EBARS) {
 
 
   .method("rjmcmc", &EBARS::rjmcmc, "reversible jump MCMC")
-  .method("predict", &EBARS::predict, "predict by spline regression with EBARS")
-  .method("knots", &EBARS::get_knots, "return estimated knots")
-  .method("samples", &EBARS::get_samples, "return posterior samples")
+  .method("predict", &EBARS::predict, "posterior prediction samples on new data")
+  .method("knots", &EBARS::get_knots, "return posterior knot samples")
+  .method("coefs", &EBARS::get_coefs, "return posterior regression coefficients samples")
+  .method("resids", &EBARS::get_resids, "return posterior residual standard deviation samples")
   ;
 }
 
