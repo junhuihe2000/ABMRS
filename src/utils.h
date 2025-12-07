@@ -4,9 +4,19 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
 
+// Structure to hold MLE regression results, 
+// including coefficients, sigma, and LLT decomposition
+struct MLERegression {
+  Eigen::VectorXd beta;
+  double sigma;
+  Eigen::LLT<Eigen::MatrixXd> llt;
+  
+  MLERegression(const Eigen::VectorXd& b, double s, const Eigen::LLT<Eigen::MatrixXd>& l)
+    : beta(b), sigma(s), llt(l) {}
+};
 
 // estimate beta and sigma in the univariate spline regression by least square estimation
-Rcpp::List mle_regression_uni(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
+MLERegression mle_regression_uni(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
                               const Eigen::VectorXd & xi,
                               int degree = 3, bool intercept = false);
 

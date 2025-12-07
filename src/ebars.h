@@ -7,14 +7,15 @@
 #include "utils.h"
 
 //' @name ClassEBARS
-//' @title extended Bayesian adaptive regression spline
-//' @description a class of [ebars()]
+//' @title extended Bayesian adaptive regression univariate spline
+//' @description a cpp class
 //'
 //' @field new constructor, see `ebars`
-//' @field rjmcmc reversible jump MCMC, a wrapper is `mcmc`
-//' @field predict predict by spline regression with EBARS
-//' @field knots return estimated knots
-//' @field samples return posterior samples
+//' @field rjmcmc run reversible jump MCMC algorithm, a wrapper is `mcmc`
+//' @field predict predict posterior response values for new data
+//' @field knots get posterior samples of knots
+//' @field coefs get posterior samples of regression coefficients
+//' @field resids get posterior samples of residual standard deviations
 class EBARS {
 private:
   int k; // the number of underlying knots
@@ -40,7 +41,7 @@ private:
 
   Eigen::VectorXd beta_mle; // estimated beta by MLE
   double sigma_mle; // estimated residual standard deviation by MLE
-  Eigen::LLT<Eigen::MatrixXd> llt; // Cholesky decomposition used in Bayesian inference
+  Eigen::MatrixXd U_chol; // Upper triangular Cholesky factor of the design matrix' cross-product BtB
   Eigen::VectorXd beta; // posterior regression coefficients by Bayesian inference
 
 
@@ -58,11 +59,10 @@ private:
 public:
   // initialize EBARS
   EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
-        Rcpp::NumericVector _para = Rcpp::NumericVector::create(1.0,0.3,2.0),
-        Rcpp::IntegerVector _num = Rcpp::IntegerVector::create(-1,-1),
-        Rcpp::List _spline = Rcpp::List::create(Rcpp::Named("degree") = 3,
-                                                Rcpp::Named("intercept") = false));
-  void rjmcmc(int burns = 500, int steps = 500); // reversible jump MCMC
+        Rcpp::NumericVector _para,
+        Rcpp::IntegerVector _num,
+        Rcpp::List _spline);
+  void rjmcmc(int burns, int steps); // reversible jump MCMC
   // predict response values on x_new
   Eigen::MatrixXd predict(const Eigen::VectorXd & x_new);
   Rcpp::List get_knots(); // return posterior knot samples

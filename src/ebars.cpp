@@ -53,18 +53,15 @@ EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
   _knots();
   _initial();
   // maximum likelihood estimation
-  // Rcpp::List pars = spline_regression(t, y, xi, degree, intercept);
-  // beta = Rcpp::as<Eigen::VectorXd>(pars["beta"]);
-  // sigma = pars["sigma"];
-  Rcpp::List mle = mle_regression_uni(t, y, xi, degree, intercept);
-  beta_mle = Rcpp::as<Eigen::VectorXd>(mle["beta"]);
-  sigma_mle = mle["sigma"];
-  llt = Rcpp::as<Eigen::LLT<Eigen::MatrixXd>>(mle["llt"]);
+  MLERegression mle = mle_regression_uni(t, y, xi, degree, intercept);
+  beta_mle = mle.beta;
+  sigma_mle = mle.sigma;
+  U_chol = mle.llt.matrixU(); // Store the upper triangular factor
   // sample beta from posterior
   double shrink_factor = m / (m + 1.0);
   Eigen::VectorXd beta_mean = shrink_factor * beta_mle;
-  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(m));
-  beta = beta_mean + shrink_factor * sigma_mle * llt.matrixU().solve(z);
+  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(beta_mle.size()));
+  beta = beta_mean + std::sqrt(shrink_factor) * sigma_mle * U_chol.triangularView<Eigen::Upper>().solve(z);
   
 
   xis = Rcpp::List::create();
@@ -138,11 +135,10 @@ void EBARS::_update() {
   }
 
   // compute MLE
-  // Rcpp::List pars_new = spline_regression(t,y,xi_new,degree,intercept);
-  Rcpp::List mle_new = mle_regression_uni(t, y, xi_new, degree, intercept);
-  Eigen::VectorXd beta_mle_new = Rcpp::as<Eigen::VectorXd>(mle_new["beta"]);
-  double sigma_mle_new = mle_new["sigma"];
-  Eigen::LLT<Eigen::MatrixXd> llt_new = Rcpp::as<Eigen::LLT<Eigen::MatrixXd>>(mle_new["llt"]);
+  MLERegression mle_new = mle_regression_uni(t, y, xi_new, degree, intercept);
+  Eigen::VectorXd beta_mle_new = mle_new.beta;
+  double sigma_mle_new = mle_new.sigma;
+  Eigen::MatrixXd U_chol_new = mle_new.llt.matrixU();
 
   // compute marginal likelihood ratio: m^((k-k')/2)*(RSS_k/RSS_k')^(m/2)
   double like_ratio = std::pow(m, (k-k_new)/2.0) * std::pow(sigma_mle/sigma_mle_new, m);
@@ -154,28 +150,16 @@ void EBARS::_update() {
   double acc_criteria = Rcpp::runif(1, 0.0, 1.0)[0];
   if(acc_criteria < acc_prob) {
     k = k_new; xi = xi_new; remain_knots = remain_new;
-    beta_mle = beta_mle_new; sigma_mle = sigma_mle_new; llt = llt_new;
+    beta_mle = beta_mle_new; sigma_mle = sigma_mle_new; U_chol = U_chol_new;
   }
 
   // sample beta from posterior
   double shrink_factor = m / (m + 1.0);
   Eigen::VectorXd beta_mean = shrink_factor * beta_mle;
-  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(m));
-  beta = beta_mean + shrink_factor * sigma_mle * llt.matrixU().solve(z);
+  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(beta_mle.size()));
+  beta = beta_mean + std::sqrt(shrink_factor) * sigma_mle * U_chol.triangularView<Eigen::Upper>().solve(z);
 }
 
-/*
-void EBARS::_update() {
-  bool state = false;
-  int max_iter = 100;
-  for(int i=0;i<max_iter;i++) {
-    state = _jump();
-    if(state) {
-      break;
-    }
-  }
-}
-*/
 
 void EBARS::rjmcmc(int burns, int steps) {
   // burns-in period
@@ -203,9 +187,6 @@ Eigen::MatrixXd EBARS::predict(const Eigen::VectorXd & x_new) {
     predictions.col(i) = y_pred;
   }
   return predictions;
-
-  // Eigen::VectorXd y_new = spline_predict(t_new, xi, beta, degree, intercept);
-  // return y_new;
 }
 
 Rcpp::List EBARS::get_knots() {
@@ -225,15 +206,19 @@ RCPP_MODULE(class_EBARS) {
   using namespace Rcpp;
 
   class_<EBARS>("EBARS")
-
-  .constructor<Eigen::VectorXd,Eigen::VectorXd,NumericVector,IntegerVector,List>("constructor")
-
-
-  .method("rjmcmc", &EBARS::rjmcmc, "reversible jump MCMC")
-  .method("predict", &EBARS::predict, "posterior prediction samples on new data")
-  .method("knots", &EBARS::get_knots, "return posterior knot samples")
-  .method("coefs", &EBARS::get_coefs, "return posterior regression coefficients samples")
-  .method("resids", &EBARS::get_resids, "return posterior residual standard deviation samples")
+    .constructor<Eigen::VectorXd, Eigen::VectorXd, NumericVector, IntegerVector, List>(
+      "Construct EBARS object for univariate spline regression"
+    )
+    .method("rjmcmc", &EBARS::rjmcmc, 
+      "Run reversible jump MCMC algorithm")
+    .method("predict", &EBARS::predict, 
+      "Predict posterior response values for new data")
+    .method("knots", &EBARS::get_knots, 
+      "Get posterior samples of knots")
+    .method("coefs", &EBARS::get_coefs, 
+      "Get posterior samples of regression coefficients")
+    .method("resids", &EBARS::get_resids, 
+      "Get posterior samples of residual standard deviations")
   ;
 }
 

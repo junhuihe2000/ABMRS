@@ -20,23 +20,6 @@ binebars(
   intercept_1 = TRUE,
   intercept_2 = TRUE
 )
-
-binebars(
-  x,
-  y,
-  gamma = 1,
-  c = 0.3,
-  times_1 = 3,
-  times_2 = 3,
-  k_1 = -1,
-  k_2 = -1,
-  n_1 = -1,
-  n_2 = -1,
-  degree_1 = 3,
-  degree_2 = 3,
-  intercept_1 = TRUE,
-  intercept_2 = TRUE
-)
 }
 \arguments{
 \item{x}{a numeric matrix, (m,2), each row indicates a predictor value (x_1,x_2).}
@@ -76,49 +59,19 @@ default value is \code{TRUE}.}
 default value is \code{TRUE}.}
 }
 \value{
-an exposed R class of cpp class called BinEBARS.
-
-an exposed R class of cpp class called BinEBARS.
+An S4 object of class BinEBARS with the following methods:
+\describe{
+\item{\code{rjmcmc(burns, steps)}}{Run reversible jump MCMC algorithm}
+\item{\code{predict(x_new)}}{Predict response values. x_new is (m,2) matrix}
+\item{\code{knots()}}{Get posterior knot samples for both dimensions}
+\item{\code{coefs()}}{Get posterior coefficient samples}
+\item{\code{resids()}}{Get posterior residual standard deviations}
+}
 }
 \description{
 see \link{ClassBinEBARS} for more details about class BinEBARS
-
-see \link{ClassBinEBARS} for more details about class BinEBARS
 }
 \examples{
-library(EBARS)
-library(splines)
-set.seed(1234)
-#tensor spline
-beta = matrix(rnorm(40,0,1),ncol=1)
-fss <- function(x,y){
-  xix = c(0.2,0.3)
-  xiy = c(0.5,0.5,0.5,0.5,0.7)
-  B = tensor_spline(cbind(x,y),xix,xiy)
-  return(B\%*\%beta)
-}
-# parameters' configuration
-m_train = 1000; m_test = 200
-burns = 1000; steps = 1000
-noise = 0.1
-# generate train data set
-x_1 = c(runif(m_train-2,0,1),0,1)
-x_2 = c(runif(m_train-2,0,1),0,1)
-y = fss(x_1,x_2)
-y_h = y + rnorm(m_train,0,noise)
-# generate test set
-x_1_new = runif(m_test,0,1)
-x_2_new = runif(m_test,0,1)
-y_new = fss(x_1_new,x_2_new)
-# run suface EBARS
-time_start = Sys.time()
-my_binebars = binebars(cbind(x_1,x_2), y_h)
-my_binebars$mcmc(10,10)
-time_end = Sys.time()
-time_end - time_start
-y_hat = my_binebars$predict(cbind(x_1_new,x_2_new))
-sum((y_new-y_hat)^2)/m_test
-
 library(EBARS)
 library(splines)
 set.seed(1234)

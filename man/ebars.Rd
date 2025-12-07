@@ -2,7 +2,7 @@
 % Please edit documentation in R/wrapper.R
 \name{ebars}
 \alias{ebars}
-\title{create an instance of EBARS}
+\title{extended Bayesian adaptive regression univariate spline}
 \usage{
 ebars(
   x,
@@ -41,7 +41,31 @@ be estimated in the algorithm, default value is \code{-1}.}
 default value is \code{TRUE}.}
 }
 \value{
-an exposed R class of cpp class called EBARS.
+An S4 object of class EBARS with the following methods:
+\describe{
+\item{\code{rjmcmc(burns, steps)}}{Run reversible jump MCMC algorithm.
+\itemize{
+\item \code{burns}: Number of burn-in iterations
+\item \code{steps}: Number of posterior sampling iterations
+}}
+\item{\code{predict(x_new)}}{Predict response values for new data.
+\itemize{
+\item \code{x_new}: Numeric vector of new predictor values
+\item Returns: Matrix of predictions, each column is a posterior sample
+}}
+\item{\code{knots()}}{Get posterior samples of knot locations.
+\itemize{
+\item Returns: List of knot vectors from each MCMC iteration
+}}
+\item{\code{coefs()}}{Get posterior samples of regression coefficients.
+\itemize{
+\item Returns: List of coefficient vectors from each MCMC iteration
+}}
+\item{\code{resids()}}{Get posterior samples of residual standard deviations.
+\itemize{
+\item Returns: List of sigma values from each MCMC iteration
+}}
+}
 }
 \description{
 see \link{ClassEBARS} for more details about class EBARS
@@ -62,13 +86,13 @@ y_h = y + rnorm(m,0,0.05)
 
 # run EBARS
 a = ebars(x,y_h,c=0.3,times = 2)
-a$mcmc()
-print(a$knots())
+a$rjmcmc(burns=2000,steps=2000)
 
 # generate test data set
 m_new = 50
 x_new = runif(m_new,0,1)
 y_new = predict(B,x_new)\%*\%beta
-y_pred = a$predict(x_new)
+pred = a$predict(x_new)
+y_hat = rowMeans(pred)
 
 }

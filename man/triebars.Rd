@@ -76,7 +76,14 @@ default value is \code{TRUE}.}
 default value is \code{TRUE}.}
 }
 \value{
-an exposed R class of cpp class called TriEBARS.
+An S4 object of class TriEBARS with the following methods:
+\describe{
+\item{\code{rjmcmc(burns, steps)}}{Run reversible jump MCMC algorithm}
+\item{\code{predict(x_new)}}{Predict response values. x_new is (m,3) matrix}
+\item{\code{knots()}}{Get posterior knot samples for all three dimensions}
+\item{\code{coefs()}}{Get posterior coefficient samples}
+\item{\code{resids()}}{Get posterior residual standard deviations}
+}
 }
 \description{
 see \link{ClassTriEBARS} for more details about class TriEBARS

@@ -2,21 +2,23 @@
 % Please edit documentation in R/RcppExports.R
 \name{ClassEBARS}
 \alias{ClassEBARS}
-\title{extended Bayesian adaptive regression spline}
+\title{extended Bayesian adaptive regression univariate spline}
 \description{
-a class of \code{\link[=ebars]{ebars()}}
+a cpp class
 }
 \section{Fields}{
 
 \describe{
 \item{\code{new}}{constructor, see \code{ebars}}
 
-\item{\code{rjmcmc}}{reversible jump MCMC, a wrapper is \code{mcmc}}
+\item{\code{rjmcmc}}{run reversible jump MCMC algorithm, a wrapper is \code{mcmc}}
 
-\item{\code{predict}}{predict by spline regression with EBARS}
+\item{\code{predict}}{predict posterior response values for new data}
 
-\item{\code{knots}}{return estimated knots}
+\item{\code{knots}}{get posterior samples of knots}
 
-\item{\code{samples}}{return posterior samples}
+\item{\code{coefs}}{get posterior samples of regression coefficients}
+
+\item{\code{resids}}{get posterior samples of residual standard deviations}
 }}
 

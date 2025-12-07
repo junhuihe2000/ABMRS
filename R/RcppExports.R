@@ -13,14 +13,15 @@
 NULL
 
 #' @name ClassEBARS
-#' @title extended Bayesian adaptive regression spline
-#' @description a class of [ebars()]
+#' @title extended Bayesian adaptive regression univariate spline
+#' @description a cpp class
 #'
 #' @field new constructor, see `ebars`
-#' @field rjmcmc reversible jump MCMC, a wrapper is `mcmc`
-#' @field predict predict by spline regression with EBARS
-#' @field knots return estimated knots
-#' @field samples return posterior samples
+#' @field rjmcmc run reversible jump MCMC algorithm, a wrapper is `mcmc`
+#' @field predict predict posterior response values for new data
+#' @field knots get posterior samples of knots
+#' @field coefs get posterior samples of regression coefficients
+#' @field resids get posterior samples of residual standard deviations
 NULL
 
 #' @name ClassTriEBARS

@@ -8,7 +8,7 @@
 // univariate spline regression
 
 // MLE of spline regression coefficients
-Rcpp::List mle_regression_uni(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
+MLERegression mle_regression_uni(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
                               const Eigen::VectorXd & xi, int degree, bool intercept) {
   // generate B-spline design matrix
   Rcpp::Environment splines = Rcpp::Environment::namespace_env("splines");
@@ -27,9 +27,7 @@ Rcpp::List mle_regression_uni(const Eigen::VectorXd & x, const Eigen::VectorXd &
   Eigen::LLT<Eigen::MatrixXd> llt(B.transpose()*B + 1e-8*Eigen::MatrixXd::Identity(B.cols(), B.cols()));
   Eigen::VectorXd beta = llt.solve(B.transpose()*y);
   double sigma = (y-B*beta).norm() / std::sqrt(m);
-  return Rcpp::List::create(Rcpp::Named("beta")=beta,
-                            Rcpp::Named("sigma")=sigma,
-                            Rcpp::Named("llt")=llt);
+  return MLERegression(beta, sigma, llt);
 }
 
 
