@@ -22,7 +22,7 @@ ebars(
 \item{y}{a numeric vector, indicates the response values, the same length as x.}
 
 \item{gamma}{double, the exponent in extended BIC, default value is \code{1.0}.
-It should be contained in \verb{[0,1]} (Nevertheless, outside is valid).}
+It should be greater than 0.}
 
 \item{c}{double, the constant affects the proposal distribution in MCMC,
 default value is \code{0.3}. It has to be contained in \verb{[0,1]}.}

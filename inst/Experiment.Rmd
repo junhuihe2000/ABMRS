@@ -13,7 +13,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(devtools)
 library(splines)
 library(ggplot2)
-library(plot3D)
 ```
 
 
@@ -35,14 +34,15 @@ void testcpp() {
 
 
 
-+ curve fitting
+## curve fitting
 
+generate data
 ```{r}
 set.seed(1234)
 knot = c(0.4,0.4,0.4,0.4,0.7)
 beta = matrix(c(3,-5,5,-3,3,-5,3,-2),ncol=1)
 # beta = matrix(c(3,-5,5,-3,3,-4),ncol=1)
-m_train = 200; m_test = 200
+m_train = 400; m_test = 400
 ```
 
 ```{r}
@@ -50,7 +50,7 @@ m_train = 200; m_test = 200
 x = c(0,sort(runif(m_train, 0, 1))[c(-1,-m_train)],1)
 B = bs(x,knots=knot,Boundary.knots=c(0,1))
 y = B%*%beta
-y_h = y + rnorm(m_train,0,0.2)
+y_h = y + rnorm(m_train,0,0.4)
 
 # generate test data set
 x_new = runif(m_test,0,1)
@@ -63,64 +63,55 @@ ggplot() + geom_point(aes(x,y_h)) + ylim(-5, 5) +
   geom_line(aes(x, B%*%beta), color="blue", size=1)
 ```
 
+```{r}
+?ebars()
+```
+
+run EBARS
 
 ```{r}
 time_start = Sys.time()
-a = ebars(x,y_h,intercept = FALSE)
-a$rjmcmc(burns=2000,steps=2000)
+a = ebars(x,y_h,gamma=1.0,n=1000)
+a$rjmcmc(burns=5000,steps=5000)
 time_end = Sys.time()
 print(time_end-time_start)
 # Time difference of 3.260445 secs
 ```
 
+plot prediction and uncertainty band
+
 ```{r}
 # plot prediction on test set
 pred = a$predict(x_new)
 y_hat = rowMeans(pred)
+mse = mean((y_hat - y_new)^2)
+cat("MSE on test set:", mse, "\n")
 y_lower = apply(pred,1,quantile,0.025)
 y_upper = apply(pred,1,quantile,0.975)
+coverage = mean((y_new>=y_lower)&(y_new<=y_upper))
+cat("95% CI coverage on test set:", coverage, "\n")
 ggplot() + geom_point(aes(x_new,y_hat),color="red") + ylim(-5, 5) +
   geom_ribbon(aes(x=x_new,ymin=y_lower,ymax=y_upper),alpha=0.2,fill="blue") +
   geom_line(aes(x, B%*%beta), color="blue", size=1)
 ```
 
 ```{r}
-?ebars
-a$knots()
+knots = a$knots()
+nums = sapply(knots, function(xi) {return(length(xi))})
+points = unlist(knots)
 ```
 
-```{r}
-samples = a$samples()
-nums = sapply(samples, function(xi) {return(length(xi))})
-points = unlist(samples)
-```
+knot posterior distribution
 
-+ histogram
 ```{r}
 ggplot(mapping=aes(x=nums)) + geom_histogram(binwidth = 0.5)
-```
 
-```{r}
-ggplot(mapping=aes(x=nums)) + geom_bar(aes(y=after_stat(prop))) + scale_x_continuous(breaks=seq(5,10),labels=seq(5,10))
-```
-
-+ density plot
-```{r}
 ggplot(mapping=aes(x=points)) + geom_density()
 ```
 
 
 
-```{r}
-y_pred = a$predict(x_new)
-sum((y_pred-y_new)^2)/m_test
-```
-
-```{r}
-ggplot() + geom_point(aes(x_new,y_pred),color="red")
-```
-
-+ surface fitting
+## surface fitting
 
 ```{r}
 set.seed(1234)

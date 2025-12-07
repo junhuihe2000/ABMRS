@@ -35,6 +35,18 @@ NULL
 #' @field samples return posterior samples
 NULL
 
+#' create a univariate B-spline basis matrix
+#' @param x a numeric vector of predictor values.
+#' @param xi a numeric vector, indicates the knots.
+#' @param degree int, the degree of polynomial, default value is `3`.
+#' @param intercept bool, whether the intercept is included in the basis, default value is `FALSE`.
+#'
+#' @returns a B-spline basis matrix.
+#' @export
+spline <- function(x, xi, degree = 3L, intercept = FALSE) {
+    .Call(`_EBARS_spline`, x, xi, degree, intercept)
+}
+
 #' create a bivariate tensor product spline basis matrix
 #' @param x a numeric matrix, (m,2), each row indicates a predictor value (x_1,x_2).
 #' @param xi_1 a numeric vector, indicates `k_1` knots in x_1.

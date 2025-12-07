@@ -3,6 +3,7 @@
 export(binebars)
 export(ebars)
 export(manifold_fitting)
+export(spline)
 export(tensor_spline)
 export(tri_tensor_spline)
 export(triebars)

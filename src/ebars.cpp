@@ -183,7 +183,9 @@ Eigen::MatrixXd EBARS::predict(const Eigen::VectorXd & x_new) {
   for(int i=0;i<xis.length();i++) {
     Eigen::VectorXd xi_sample = Rcpp::as<Eigen::VectorXd>(xis[i]);
     Eigen::VectorXd beta_sample = Rcpp::as<Eigen::VectorXd>(betas[i]);
-    Eigen::VectorXd y_pred = spline_predict(t_new, xi_sample, beta_sample, degree, intercept);
+    // Eigen::VectorXd y_pred = spline_predict(t_new, xi_sample, beta_sample, degree, intercept);
+    Eigen::MatrixXd B = spline(t_new, xi_sample, degree, intercept);
+    Eigen::VectorXd y_pred = B * beta_sample;
     predictions.col(i) = y_pred;
   }
   return predictions;

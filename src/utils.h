@@ -15,20 +15,41 @@ struct MLERegression {
     : beta(b), sigma(s), llt(l) {}
 };
 
+
+
+// ------ univariate spline regression ------
+
 // estimate beta and sigma in the univariate spline regression by least square estimation
 MLERegression mle_regression_uni(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
                               const Eigen::VectorXd & xi,
                               int degree = 3, bool intercept = false);
 
+/*
 Rcpp::List spline_regression(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
                              const Eigen::VectorXd & xi,
                              int degree = 3, bool intercept = false);
+*/
 
+/*
 // predict response values on x_new by spline regression
 Eigen::VectorXd spline_predict(const Eigen::VectorXd & x_new, const Eigen::VectorXd & xi,
                                const Eigen::VectorXd & beta,
                                int degree = 3, bool intercept = false);
+*/
 
+//' create a univariate B-spline basis matrix
+//' @param x a numeric vector of predictor values.
+//' @param xi a numeric vector, indicates the knots.
+//' @param degree int, the degree of polynomial, default value is `3`.
+//' @param intercept bool, whether the intercept is included in the basis, default value is `FALSE`.
+//'
+//' @returns a B-spline basis matrix.
+//' @export
+// [[Rcpp::export(spline)]]
+Eigen::MatrixXd spline(const Eigen::VectorXd & x, const Eigen::VectorXd & xi,
+                       int degree = 3, bool intercept = false);
+
+                       
 // estimate beta and sigma in the surface spline regression by least square estimation
 Rcpp::List surface_spline_regression(const Eigen::MatrixXd & x,
                                      const Eigen::VectorXd & y,

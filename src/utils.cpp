@@ -5,7 +5,7 @@
 
 #include "utils.h"
 
-// univariate spline regression
+// ------ univariate spline regression ------
 
 // MLE of spline regression coefficients
 MLERegression mle_regression_uni(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
@@ -30,7 +30,7 @@ MLERegression mle_regression_uni(const Eigen::VectorXd & x, const Eigen::VectorX
   return MLERegression(beta, sigma, llt);
 }
 
-
+/*
 Rcpp::List spline_regression(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
                              const Eigen::VectorXd & xi, int degree, bool intercept) {
   // generate B-spline design matrix
@@ -47,7 +47,9 @@ Rcpp::List spline_regression(const Eigen::VectorXd & x, const Eigen::VectorXd & 
   return Rcpp::List::create(Rcpp::Named("beta")=beta,
                             Rcpp::Named("sigma")=sigma);
 }
-
+*/
+  
+/*
 Eigen::VectorXd spline_predict(const Eigen::VectorXd & x_new, const Eigen::VectorXd & xi,
                                const Eigen::VectorXd & beta,
                                int degree, bool intercept) {
@@ -63,6 +65,24 @@ Eigen::VectorXd spline_predict(const Eigen::VectorXd & x_new, const Eigen::Vecto
   Eigen::VectorXd y_new = B*beta;
   return y_new;
 }
+*/
+
+Eigen::MatrixXd spline(const Eigen::VectorXd & x,
+                       const Eigen::VectorXd & xi,
+                       int degree, bool intercept) {
+  // generate B-spline design matrix
+  Rcpp::Environment splines = Rcpp::Environment::namespace_env("splines");
+  Rcpp::Function bs = splines["bs"];
+
+  Eigen::MatrixXd B = Rcpp::as<Eigen::MatrixXd>(bs(Rcpp::Named("x")=Rcpp::wrap(x),
+                                                   Rcpp::Named("knots")=Rcpp::wrap(xi),
+                                                   Rcpp::Named("degree")=degree,
+                                                   Rcpp::Named("intercept")=intercept,
+                                                   Rcpp::Named("Boundary.knots")=Rcpp::NumericVector::create(0.0,1.0)));
+  return B;
+}
+
+
 
 Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
                               const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2,
