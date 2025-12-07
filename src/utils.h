@@ -20,9 +20,9 @@ struct MLERegression {
 // ------ univariate spline regression ------
 
 // estimate beta and sigma in the univariate spline regression by least square estimation
-MLERegression mle_regression_uni(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
-                              const Eigen::VectorXd & xi,
-                              int degree = 3, bool intercept = false);
+MLERegression mle_regression(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
+                             const Eigen::VectorXd & xi,
+                             int degree = 3, bool intercept = false);
 
 /*
 Rcpp::List spline_regression(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
@@ -37,17 +37,19 @@ Eigen::VectorXd spline_predict(const Eigen::VectorXd & x_new, const Eigen::Vecto
                                int degree = 3, bool intercept = false);
 */
 
-//' create a univariate B-spline basis matrix
-//' @param x a numeric vector of predictor values.
-//' @param xi a numeric vector, indicates the knots.
-//' @param degree int, the degree of polynomial, default value is `3`.
-//' @param intercept bool, whether the intercept is included in the basis, default value is `FALSE`.
-//'
-//' @returns a B-spline basis matrix.
-//' @export
-// [[Rcpp::export(spline)]]
+// generate B-spline basis matrix
 Eigen::MatrixXd spline(const Eigen::VectorXd & x, const Eigen::VectorXd & xi,
                        int degree = 3, bool intercept = false);
+
+
+// ------ bivariate spline regression ------
+
+// estimate beta and sigma in the bivariate spline regression by least square estimation
+MLERegression mle_regression(const Eigen::MatrixXd & x,
+                             const Eigen::VectorXd & y,
+                             const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2,
+                             int degree_1, int degree_2,
+                             bool intercept_1, bool intercept_2);
 
                        
 // estimate beta and sigma in the surface spline regression by least square estimation
@@ -77,14 +79,30 @@ Rcpp::List cube_spline_regression(const Eigen::MatrixXd & x,
 //' @param intercept_2 bool, whether the intercept is included in the basis in x_2,
 //' default value is `FALSE`.
 //'
-//' @returns a bivariate tensor product spline basis matrix, m rows and (k_1+3)*(k_2+3) cols.
+//' @returns a bivariate tensor product B-spline basis matrix.
 //'
 //' @export
-// [[Rcpp::export(tensor_spline)]]
-Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
+// [[Rcpp::export(bi_tensor_spline)]]
+Eigen::MatrixXd bi_tensor_spline(const Eigen::MatrixXd & x,
                               const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2,
                               int degree_1 = 3, int degree_2 = 3,
                               bool intercept_1 = false, bool intercept_2 = false);
+
+
+// ------ multivariate spline regression ------
+
+// estimate beta and sigma in the multivariate spline regression by least square estimation
+MLERegression mle_regression(const Eigen::MatrixXd & x,
+                             const Eigen::VectorXd & y,
+                             const std::vector<Eigen::VectorXd> & xis,
+                             const std::vector<int> & degrees,
+                             const Rcpp::LogicalVector & intercepts);
+
+// General tensor spline for arbitrary dimensions
+Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
+                              const std::vector<Eigen::VectorXd> & xis,
+                              std::vector<int> degrees = {},
+                              Rcpp::LogicalVector intercepts = {});
 
 
 //' create a trivariate tensor product spline basis matrix
@@ -102,7 +120,7 @@ Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
 //' @param intercept_3 bool, whether the intercept is included in the basis in x_3,
 //' default value is `FALSE`.
 //'
-//' @returns a trivariate tensor product spline basis matrix.
+//' @returns a trivariate tensor product B-spline basis matrix.
 //'
 //' @export
 // [[Rcpp::export(tri_tensor_spline)]]

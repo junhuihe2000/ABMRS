@@ -1,40 +1,42 @@
-#ifndef EBARS_H
-#define EBARS_H
+#ifndef MEBARS_H
+#define MEBARS_H
 
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
 
 #include "utils.h"
 
-//' @name ClassEBARS
-//' @title extended Bayesian adaptive regression univariate spline
+
+//' @name ClassMEBARS
+//' @title extended Bayesian adaptive regression multivariate spline
 //' @description a cpp class
 //'
-//' @field new constructor, see `ebars`
+//' @field new constructor, see `mebars`
 //' @field rjmcmc run reversible jump MCMC algorithm
 //' @field predict predict posterior response values for new data
 //' @field knots get posterior samples of knots
 //' @field coefs get posterior samples of regression coefficients
 //' @field resids get posterior samples of residual standard deviations
-class EBARS {
+class MEBARS {
 private:
-  int k; // the number of underlying knots
-  int n; // the number of all potential knots
+  std::vector<int> ks; // the number of underlying knots
+  std::vector<int> ns; // the number of all potential knots
   int m; // the number of training points
-  int nv; // the dimension of spline space
-  int degree; // the degree of polynomials
+  int d; // the dimension of predictors
+  int nv; // the dimension of tensor product spline spaces
+  std::vector<int> degrees; // the degree of polynomials
   double gamma, c; // constants
-  double xmin, xmax; // range of x
-  bool fix_k; // whether k is given and fixed
-  bool intercept; // whether an intercept is included in the basis
+  Eigen::RowVectorXd xmin, xmax; // range of x
+  Rcpp::LogicalVector fix_ks; // whether k is given and fixed
+  Rcpp::LogicalVector intercepts; // whether an intercept is included in the basis
 
-  Eigen::VectorXd x;
+  Eigen::MatrixXd x;
   Eigen::VectorXd y;
-  Eigen::VectorXd t;
+  Eigen::MatrixXd t;
 
-  Eigen::VectorXd knots; // all knots
-  Eigen::VectorXd xi; // selected knots
-  Eigen::VectorXd remain_knots; // remaining knots
+  std::vector<Eigen::VectorXd> all_knots; // all knots
+  std::vector<Eigen::VectorXd> xi; // selected knots
+  std::vector<Eigen::VectorXd> remain_knots; // remaining knots
 
   Rcpp::List _xis; // posterior samples of normalized selected knots
   Rcpp::List xis; // posterior samples of selected knots
@@ -48,9 +50,9 @@ private:
 
 
   // compute probabilities of the next movement type
-  double _birth();
-  double _death();
-  double _relocate();
+  double _birth(int i);
+  double _death(int i);
+  double _relocate(int i);
 
   void _knots(); // create equally-spaced knot locations
   void _initial(); // initialize
@@ -58,14 +60,14 @@ private:
   void _update(); // one step movement in RJMCMC
 
 public:
-  // initialize EBARS
-  EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
-        Rcpp::NumericVector _para,
-        Rcpp::IntegerVector _num,
-        Rcpp::List _spline);
+  // initialize MEBARS
+  MEBARS(const Eigen::MatrixXd & _x, const Eigen::VectorXd & _y,
+         Rcpp::NumericVector _para,
+         Rcpp::IntegerVector _num,
+         Rcpp::List _spline);
   void rjmcmc(int burns, int steps); // reversible jump MCMC
   // predict response values on x_new
-  Eigen::MatrixXd predict(const Eigen::VectorXd & x_new);
+  Eigen::MatrixXd predict(const Eigen::MatrixXd & x_new);
   Rcpp::List get_knots(); // return posterior knot samples
   Rcpp::List get_coefs(); // return posterior regression coefficients samples
   Rcpp::List get_resids(); // return posterior residual standard deviation samples

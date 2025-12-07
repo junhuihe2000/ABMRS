@@ -26,8 +26,22 @@ BEGIN_RCPP
 END_RCPP
 }
 // tensor_spline
-Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd& x, const Eigen::VectorXd& xi_1, const Eigen::VectorXd& xi_2, int degree_1, int degree_2, bool intercept_1, bool intercept_2);
-RcppExport SEXP _EBARS_tensor_spline(SEXP xSEXP, SEXP xi_1SEXP, SEXP xi_2SEXP, SEXP degree_1SEXP, SEXP degree_2SEXP, SEXP intercept_1SEXP, SEXP intercept_2SEXP) {
+Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd& x, const std::vector<Eigen::VectorXd>& xis, std::vector<int> degrees, Rcpp::LogicalVector intercepts);
+RcppExport SEXP _EBARS_tensor_spline(SEXP xSEXP, SEXP xisSEXP, SEXP degreesSEXP, SEXP interceptsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const std::vector<Eigen::VectorXd>& >::type xis(xisSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type degrees(degreesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type intercepts(interceptsSEXP);
+    rcpp_result_gen = Rcpp::wrap(tensor_spline(x, xis, degrees, intercepts));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bi_tensor_spline
+Eigen::MatrixXd bi_tensor_spline(const Eigen::MatrixXd& x, const Eigen::VectorXd& xi_1, const Eigen::VectorXd& xi_2, int degree_1, int degree_2, bool intercept_1, bool intercept_2);
+RcppExport SEXP _EBARS_bi_tensor_spline(SEXP xSEXP, SEXP xi_1SEXP, SEXP xi_2SEXP, SEXP degree_1SEXP, SEXP degree_2SEXP, SEXP intercept_1SEXP, SEXP intercept_2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -38,7 +52,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type degree_2(degree_2SEXP);
     Rcpp::traits::input_parameter< bool >::type intercept_1(intercept_1SEXP);
     Rcpp::traits::input_parameter< bool >::type intercept_2(intercept_2SEXP);
-    rcpp_result_gen = Rcpp::wrap(tensor_spline(x, xi_1, xi_2, degree_1, degree_2, intercept_1, intercept_2));
+    rcpp_result_gen = Rcpp::wrap(bi_tensor_spline(x, xi_1, xi_2, degree_1, degree_2, intercept_1, intercept_2));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -65,14 +79,17 @@ END_RCPP
 
 RcppExport SEXP _rcpp_module_boot_class_BinEBARS();
 RcppExport SEXP _rcpp_module_boot_class_EBARS();
+RcppExport SEXP _rcpp_module_boot_class_MEBARS();
 RcppExport SEXP _rcpp_module_boot_class_TriEBARS();
 
 static const R_CallMethodDef CallEntries[] = {
     {"_EBARS_spline", (DL_FUNC) &_EBARS_spline, 4},
-    {"_EBARS_tensor_spline", (DL_FUNC) &_EBARS_tensor_spline, 7},
+    {"_EBARS_tensor_spline", (DL_FUNC) &_EBARS_tensor_spline, 4},
+    {"_EBARS_bi_tensor_spline", (DL_FUNC) &_EBARS_bi_tensor_spline, 7},
     {"_EBARS_tri_tensor_spline", (DL_FUNC) &_EBARS_tri_tensor_spline, 10},
     {"_rcpp_module_boot_class_BinEBARS", (DL_FUNC) &_rcpp_module_boot_class_BinEBARS, 0},
     {"_rcpp_module_boot_class_EBARS", (DL_FUNC) &_rcpp_module_boot_class_EBARS, 0},
+    {"_rcpp_module_boot_class_MEBARS", (DL_FUNC) &_rcpp_module_boot_class_MEBARS, 0},
     {"_rcpp_module_boot_class_TriEBARS", (DL_FUNC) &_rcpp_module_boot_class_TriEBARS, 0},
     {NULL, NULL, 0}
 };

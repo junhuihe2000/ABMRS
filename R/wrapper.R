@@ -78,7 +78,111 @@ ebars <- function(x, y, gamma = 1.0, c = 0.3, times = 3,
   return(obj)
 }
 
+#' @title extended Bayesian adaptive regression multivariate spline
+#' @description
+#' see [ClassMEBARS] for more details about class MEBARS
+#'
+#'
+#' @param x a numeric matrix, indicates the predictor values, each column is a predictor.
+#' @param y a numeric vector, indicates the response values.
+#' @param gamma double, the exponent in extended BIC, default value is `1.0`.
+#' It should be greater than 0.
+#' @param c double, the constant affects the proposal distribution in MCMC,
+#' default value is `0.3`. It has to be contained in `[0,1]`.
+#' @param times a double vector with the length `ncol(x)`, decides the number of all potential knots if `ns<0`.
+#' In this case, the number is `nrow(x) * times`, default value is `c(3, 3, ...)`.
+#' @param ks an integer vector with the length `ncol(x)`, the number of knots is fixed if `ks>0`. Otherwise `ks` will
+#' be estimated in the algorithm, default value is `c(-1, -1, ...)`.
+#' @param ns an integer vector with the length `ncol(x)`, the number of all potential knots, default value is `c(-1, -1, ...)`.
+#' @param degrees an integer vector with the length `ncol(x)`, the degree of polynomial spline, default value is `c(3, 3, ...)`.
+#' @param intercepts a logical vector with the length `ncol(x)`, whether the intercept is included in the basis,
+#' default value is `c(TRUE, TRUE, ...)`.
+#' @returns An S4 object of class MEBARS with the following methods:
+#' \describe{
+#'   \item{\code{rjmcmc(burns, steps)}}{Run reversible jump MCMC algorithm.
+#'     \itemize{
+#'       \item \code{burns}: Number of burn-in iterations
+#'       \item \code{steps}: Number of posterior sampling iterations
+#'     }}
+#'   \item{\code{predict(x_new)}}{Predict response values for new data.
+#'     \itemize{
+#'       \item \code{x_new}: Numeric matrix of new predictor values
+#'       \item Returns: Matrix of predictions, each column is a posterior sample
+#'     }}
+#'   \item{\code{knots()}}{Get posterior samples of knot locations.
+#'     \itemize{
+#'       \item Returns: List of knot vectors from each MCMC iteration
+#'     }}
+#'   \item{\code{coefs()}}{Get posterior samples of regression coefficients.
+#'     \itemize{
+#'       \item Returns: List of coefficient vectors from each MCMC iteration
+#'     }}
+#'   \item{\code{resids()}}{Get posterior samples of residual standard deviations.
+#'     \itemize{
+#'       \item Returns: List of sigma values from each MCMC iteration
+#'     }}
+#' }
+#' @export
+#' @examples
+#' library(EBARS)
+#' library(splines)
+#' set.seed(1234)
+#' # tensor spline
+#' beta = matrix(rnorm(40,0,1),ncol=1)
+#' fss <- function(x,y){
+#'   xix = c(0.2,0.3)
+#'   xiy = c(0.5,0.5,0.5,0.5,0.7)
+#'   B = tensor_spline(cbind(x,y),list(xix,xiy))
+#'   return(B%*%beta)
+#' }
+#' # parameters' configuration
+#' m_train = 1000; m_test = 200
+#' burns = 1000; steps = 1000
+#' noise = 0.1
+#' # generate train data set
+#' x_1 = c(runif(m_train-2,0,1),0,1)
+#' x_2 = c(runif(m_train-2,0,1),0,1)
+#' y = fss(x_1,x_2)
+#' y_h = y + rnorm(m_train,0,noise)
+#' # generate test set
+#' x_1_new = runif(m_test,0,1)
+#' x_2_new = runif(m_test,0,1)
+#' y_new = fss(x_1_new,x_2_new)
+#' # run suface EBARS
+#' time_start = Sys.time()
+#' my_mebars = mebars(cbind(x_1,x_2), y_h)
+#' my_mebars$mcmc(100,100)
+#' time_end = Sys.time()
+#' time_end - time_start
+#' pred = my_mebars$predict(cbind(x_1_new,x_2_new))
+#' y_hat = rowMeans(pred)
+#' sum((y_new-y_hat)^2)/m_test
+#'
+mebars <- function(x, y, gamma = 1.0, c = 0.3, times = NULL,
+                   ks = NULL, ns = NULL, degrees = NULL, intercepts = NULL) {
+  d <- ncol(x)
+  if (is.null(times)) {
+    times <- rep(3, d)
+  }
+  if (is.null(ks)) {
+    ks <- rep(-1, d)
+  }
+  if (is.null(ns)) {
+    ns <- rep(-1, d)
+  }
+  if (is.null(degrees)) {
+    degrees <- rep(3, d)
+  }
+  if (is.null(intercepts)) {
+    intercepts <- rep(TRUE, d)
+  }
 
+
+  obj <- MEBARS$new(x, y, c(gamma, c, times), c(ks, ns), 
+                   list("degrees" = degrees, "intercept" = intercepts))
+  
+  return(obj)
+}
 
 #' create an instance of BinEBARS
 #' @description

@@ -2,38 +2,33 @@
 % Please edit documentation in R/RcppExports.R
 \name{tensor_spline}
 \alias{tensor_spline}
-\title{create a bivariate tensor product spline basis matrix}
+\title{create a general tensor product spline basis matrix for arbitrary dimensions}
 \usage{
-tensor_spline(
-  x,
-  xi_1,
-  xi_2,
-  degree_1 = 3L,
-  degree_2 = 3L,
-  intercept_1 = FALSE,
-  intercept_2 = FALSE
-)
+tensor_spline(x, xis, degrees, intercepts)
 }
 \arguments{
-\item{x}{a numeric matrix, (m,2), each row indicates a predictor value (x_1,x_2).}
+\item{x}{a numeric matrix, (m,d), each row indicates a predictor value.}
 
-\item{xi_1}{a numeric vector, indicates \code{k_1} knots in x_1.}
+\item{xis}{a list of numeric vectors, each element contains knots for one dimension.}
 
-\item{xi_2}{a numeric vector, indicates \code{k_2} knots in x_2}
+\item{degrees}{an integer vector, degrees for each dimension, default is \code{c(3,3,...)}.}
 
-\item{degree_1}{int, the degree of polynomial in x_1, default value is \code{3}.}
-
-\item{degree_2}{int, the degree of polynomial in x_2, default value is \code{3}.}
-
-\item{intercept_1}{bool, whether the intercept is included in the basis in x_1,
-default value is \code{FALSE}.}
-
-\item{intercept_2}{bool, whether the intercept is included in the basis in x_2,
-default value is \code{FALSE}.}
+\item{intercepts}{a logical vector, whether intercepts are included for each dimension, default is \code{c(FALSE,FALSE,...)}.}
 }
 \value{
-a bivariate tensor product spline basis matrix, m rows and (k_1+3)*(k_2+3) cols.
+a tensor product B-spline basis matrix.
 }
 \description{
-create a bivariate tensor product spline basis matrix
+create a general tensor product spline basis matrix for arbitrary dimensions
+}
+\examples{
+# 2D example
+x <- matrix(runif(100), ncol=2)
+xis <- list(c(0.3, 0.6), c(0.4, 0.5))
+B <- tensor_spline(x, xis, c(3,3), c(FALSE,FALSE))
+
+# 3D example
+x <- matrix(runif(150), ncol=3)
+xis <- list(c(0.2, 0.5), c(0.3, 0.7), c(0.4))
+B <- tensor_spline(x, xis, c(3,3,3), c(TRUE,TRUE,TRUE))
 }

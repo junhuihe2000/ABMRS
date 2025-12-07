@@ -53,10 +53,11 @@ EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
   _knots();
   _initial();
   // maximum likelihood estimation
-  MLERegression mle = mle_regression_uni(t, y, xi, degree, intercept);
+  MLERegression mle = mle_regression(t, y, xi, degree, intercept);
   beta_mle = mle.beta;
   sigma_mle = mle.sigma;
   U_chol = mle.llt.matrixU(); // Store the upper triangular factor
+  nv = beta_mle.size();
   // sample beta from posterior
   double shrink_factor = m / (m + 1.0);
   Eigen::VectorXd beta_mean = shrink_factor * beta_mle;
@@ -135,13 +136,15 @@ void EBARS::_update() {
   }
 
   // compute MLE
-  MLERegression mle_new = mle_regression_uni(t, y, xi_new, degree, intercept);
+  MLERegression mle_new = mle_regression(t, y, xi_new, degree, intercept);
   Eigen::VectorXd beta_mle_new = mle_new.beta;
   double sigma_mle_new = mle_new.sigma;
   Eigen::MatrixXd U_chol_new = mle_new.llt.matrixU();
+  int nv_new = beta_mle_new.size();
 
   // compute marginal likelihood ratio: m^((k-k')/2)*(RSS_k/RSS_k')^(m/2)
-  double like_ratio = std::pow(m, (k-k_new)/2.0) * std::pow(sigma_mle/sigma_mle_new, m);
+  // double like_ratio = std::pow(m, (k-k_new)/2.0) * std::pow(sigma_mle/sigma_mle_new, m);
+  double like_ratio = std::pow(m, (nv-nv_new)/2.0) * std::pow(sigma_mle/sigma_mle_new, m);
 
   // compute acceptance probability
   double acc_prob = (k > 0) ? like_ratio : birth * like_ratio;
@@ -150,7 +153,7 @@ void EBARS::_update() {
   double acc_criteria = Rcpp::runif(1, 0.0, 1.0)[0];
   if(acc_criteria < acc_prob) {
     k = k_new; xi = xi_new; remain_knots = remain_new;
-    beta_mle = beta_mle_new; sigma_mle = sigma_mle_new; U_chol = U_chol_new;
+    beta_mle = beta_mle_new; sigma_mle = sigma_mle_new; U_chol = U_chol_new; nv = nv_new;
   }
 
   // sample beta from posterior
@@ -169,6 +172,7 @@ void EBARS::rjmcmc(int burns, int steps) {
   // posterior samples of knots
   for(int i=0;i<steps;i++) {
     _update();
+    _xis.push_back(xi);
     xis.push_back(xi.array()*(xmax-xmin) + xmin);
     betas.push_back(beta);
     sigmas.push_back(sigma_mle);
@@ -181,9 +185,8 @@ Eigen::MatrixXd EBARS::predict(const Eigen::VectorXd & x_new) {
   // predict for new data using each posterior sample
   Eigen::MatrixXd predictions(t_new.size(), xis.length());
   for(int i=0;i<xis.length();i++) {
-    Eigen::VectorXd xi_sample = Rcpp::as<Eigen::VectorXd>(xis[i]);
+    Eigen::VectorXd xi_sample = Rcpp::as<Eigen::VectorXd>(_xis[i]);
     Eigen::VectorXd beta_sample = Rcpp::as<Eigen::VectorXd>(betas[i]);
-    // Eigen::VectorXd y_pred = spline_predict(t_new, xi_sample, beta_sample, degree, intercept);
     Eigen::MatrixXd B = spline(t_new, xi_sample, degree, intercept);
     Eigen::VectorXd y_pred = B * beta_sample;
     predictions.col(i) = y_pred;

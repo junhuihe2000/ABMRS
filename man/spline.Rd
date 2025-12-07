@@ -4,7 +4,7 @@
 \alias{spline}
 \title{create a univariate B-spline basis matrix}
 \usage{
-spline(x, xi, degree = 3L, intercept = FALSE)
+spline(x, xi, degree, intercept)
 }
 \arguments{
 \item{x}{a numeric vector of predictor values.}

@@ -26,8 +26,9 @@ using namespace std;
 
 // [[Rcpp::export(testcpp)]]
 void testcpp() {
-  Rcpp::List l = Rcpp::List::create();
-  cout << l.length() << endl;
+  int n = 10;
+  Rcpp::IntegerVector v = Rcpp::sample(n, 10);
+  Rcpp::Rcout << v << std::endl;
 }
 ')
 ```

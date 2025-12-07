@@ -17,7 +17,19 @@ NULL
 #' @description a cpp class
 #'
 #' @field new constructor, see `ebars`
-#' @field rjmcmc run reversible jump MCMC algorithm, a wrapper is `mcmc`
+#' @field rjmcmc run reversible jump MCMC algorithm
+#' @field predict predict posterior response values for new data
+#' @field knots get posterior samples of knots
+#' @field coefs get posterior samples of regression coefficients
+#' @field resids get posterior samples of residual standard deviations
+NULL
+
+#' @name ClassMEBARS
+#' @title extended Bayesian adaptive regression multivariate spline
+#' @description a cpp class
+#'
+#' @field new constructor, see `mebars`
+#' @field rjmcmc run reversible jump MCMC algorithm
 #' @field predict predict posterior response values for new data
 #' @field knots get posterior samples of knots
 #' @field coefs get posterior samples of regression coefficients
@@ -43,8 +55,31 @@ NULL
 #'
 #' @returns a B-spline basis matrix.
 #' @export
-spline <- function(x, xi, degree = 3L, intercept = FALSE) {
+spline <- function(x, xi, degree, intercept) {
     .Call(`_EBARS_spline`, x, xi, degree, intercept)
+}
+
+#' create a general tensor product spline basis matrix for arbitrary dimensions
+#' @param x a numeric matrix, (m,d), each row indicates a predictor value.
+#' @param xis a list of numeric vectors, each element contains knots for one dimension.
+#' @param degrees an integer vector, degrees for each dimension, default is `c(3,3,...)`.
+#' @param intercepts a logical vector, whether intercepts are included for each dimension, default is `c(FALSE,FALSE,...)`.
+#'
+#' @returns a tensor product B-spline basis matrix.
+#'
+#' @export
+#' @examples
+#' # 2D example
+#' x <- matrix(runif(100), ncol=2)
+#' xis <- list(c(0.3, 0.6), c(0.4, 0.5))
+#' B <- tensor_spline(x, xis, c(3,3), c(FALSE,FALSE))
+#' 
+#' # 3D example
+#' x <- matrix(runif(150), ncol=3)
+#' xis <- list(c(0.2, 0.5), c(0.3, 0.7), c(0.4))
+#' B <- tensor_spline(x, xis, c(3,3,3), c(TRUE,TRUE,TRUE))
+tensor_spline <- function(x, xis, degrees, intercepts) {
+    .Call(`_EBARS_tensor_spline`, x, xis, degrees, intercepts)
 }
 
 #' create a bivariate tensor product spline basis matrix
@@ -58,11 +93,11 @@ spline <- function(x, xi, degree = 3L, intercept = FALSE) {
 #' @param intercept_2 bool, whether the intercept is included in the basis in x_2,
 #' default value is `FALSE`.
 #'
-#' @returns a bivariate tensor product spline basis matrix, m rows and (k_1+3)*(k_2+3) cols.
+#' @returns a bivariate tensor product B-spline basis matrix.
 #'
 #' @export
-tensor_spline <- function(x, xi_1, xi_2, degree_1 = 3L, degree_2 = 3L, intercept_1 = FALSE, intercept_2 = FALSE) {
-    .Call(`_EBARS_tensor_spline`, x, xi_1, xi_2, degree_1, degree_2, intercept_1, intercept_2)
+bi_tensor_spline <- function(x, xi_1, xi_2, degree_1 = 3L, degree_2 = 3L, intercept_1 = FALSE, intercept_2 = FALSE) {
+    .Call(`_EBARS_bi_tensor_spline`, x, xi_1, xi_2, degree_1, degree_2, intercept_1, intercept_2)
 }
 
 #' create a trivariate tensor product spline basis matrix
@@ -80,7 +115,7 @@ tensor_spline <- function(x, xi_1, xi_2, degree_1 = 3L, degree_2 = 3L, intercept
 #' @param intercept_3 bool, whether the intercept is included in the basis in x_3,
 #' default value is `FALSE`.
 #'
-#' @returns a trivariate tensor product spline basis matrix.
+#' @returns a trivariate tensor product B-spline basis matrix.
 #'
 #' @export
 tri_tensor_spline <- function(x, xi_1, xi_2, xi_3, degree_1 = 3L, degree_2 = 3L, degree_3 = 3L, intercept_1 = FALSE, intercept_2 = FALSE, intercept_3 = FALSE) {
