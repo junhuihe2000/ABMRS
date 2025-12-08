@@ -1,4 +1,4 @@
-#' @useDynLib EBARS, .registration = TRUE
+#' @useDynLib ABMRS, .registration = TRUE
 #' @importFrom Rcpp evalCpp
 #' @import RcppEigen
 #' @importFrom splines bs

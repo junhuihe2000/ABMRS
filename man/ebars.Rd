@@ -71,7 +71,7 @@ An S4 object of class EBARS with the following methods:
 see \link{ClassEBARS} for more details about class EBARS
 }
 \examples{
-library(EBARS)
+library(ABMRS)
 library(splines)
 set.seed(1234)
 knot = c(0.4,0.4,0.4,0.4,0.7)

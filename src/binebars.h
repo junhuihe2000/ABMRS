@@ -6,7 +6,7 @@
 
 #include "utils.h"
 
-
+/*
 //' @name ClassBinEBARS
 //' @title bivariate extended Bayesian adaptive regression spline
 //' @description a class of [binebars()]
@@ -67,9 +67,7 @@ public:
   Rcpp::List get_knots(); // return estimated knots
   Rcpp::List get_samples(); // return posterior samples
 };
-
-
-
+*/
 
 
 #endif

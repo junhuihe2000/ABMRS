@@ -11,9 +11,9 @@ tensor_spline(x, xis, degrees, intercepts)
 
 \item{xis}{a list of numeric vectors, each element contains knots for one dimension.}
 
-\item{degrees}{an integer vector, degrees for each dimension, default is \code{c(3,3,...)}.}
+\item{degrees}{an integer vector, degrees for each dimension.}
 
-\item{intercepts}{a logical vector, whether intercepts are included for each dimension, default is \code{c(FALSE,FALSE,...)}.}
+\item{intercepts}{a logical vector, whether intercepts are included for each dimension.}
 }
 \value{
 a tensor product B-spline basis matrix.

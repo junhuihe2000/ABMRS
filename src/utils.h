@@ -42,6 +42,8 @@ Eigen::MatrixXd spline(const Eigen::VectorXd & x, const Eigen::VectorXd & xi,
                        int degree = 3, bool intercept = false);
 
 
+
+/*
 // ------ bivariate spline regression ------
 
 // estimate beta and sigma in the bivariate spline regression by least square estimation
@@ -58,16 +60,20 @@ Rcpp::List surface_spline_regression(const Eigen::MatrixXd & x,
                                      const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2,
                                      int degree_1 = 3, int degree_2 = 3,
                                      bool intercept_1 = false, bool intercept_2 = false);
+*/
 
 
+/*
 // estimate beta and sigma in the cube spline regression by least square estimation
 Rcpp::List cube_spline_regression(const Eigen::MatrixXd & x,
                                   const Eigen::VectorXd & y,
                                   const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2, const Eigen::VectorXd & xi_3,
                                   int degree_1 = 3, int degree_2 = 3, int degree_3 = 3,
                                   bool intercept_1 = false, bool intercept_2 = false, bool intercept_3 = false);
+*/
 
-
+                                  
+/*
 //' create a bivariate tensor product spline basis matrix
 //' @param x a numeric matrix, (m,2), each row indicates a predictor value (x_1,x_2).
 //' @param xi_1 a numeric vector, indicates `k_1` knots in x_1.
@@ -87,6 +93,7 @@ Eigen::MatrixXd bi_tensor_spline(const Eigen::MatrixXd & x,
                               const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2,
                               int degree_1 = 3, int degree_2 = 3,
                               bool intercept_1 = false, bool intercept_2 = false);
+*/
 
 
 // ------ multivariate spline regression ------
@@ -101,10 +108,11 @@ MLERegression mle_regression(const Eigen::MatrixXd & x,
 // General tensor spline for arbitrary dimensions
 Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
                               const std::vector<Eigen::VectorXd> & xis,
-                              std::vector<int> degrees = {},
-                              Rcpp::LogicalVector intercepts = {});
+                              std::vector<int> degrees,
+                              Rcpp::LogicalVector intercepts);
 
 
+/*
 //' create a trivariate tensor product spline basis matrix
 //' @param x a numeric matrix, (m,3), each row indicates a predictor value (x_1,x_2,x_3).
 //' @param xi_1 a numeric vector, indicates `k_1` knots in x_1.
@@ -128,22 +136,26 @@ Eigen::MatrixXd tri_tensor_spline(const Eigen::MatrixXd & x,
                               const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2, const Eigen::VectorXd & xi_3,
                               int degree_1 = 3, int degree_2 = 3, int degree_3 = 3,
                               bool intercept_1 = false, bool intercept_2 = false, bool intercept_3 = false);
+*/
 
-
+/*
 // predict response values on x_new by surface spline regression
 Eigen::VectorXd surface_spline_predict(const Eigen::MatrixXd & x_new,
                                        const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2,
                                        const Eigen::VectorXd & beta,
                                        int degree_1 = 3, int degree_2 = 3,
                                        bool intercept_1 = false, bool intercept_2 = false);
+*/
 
 
+/*
 // predict response values on x_new by cube spline regression
 Eigen::VectorXd cube_spline_predict(const Eigen::MatrixXd & x_new,
                                     const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2, const Eigen::VectorXd & xi_3,
                                     const Eigen::VectorXd & beta,
                                     int degree_1 = 3, int degree_2 = 3, int degree_3 = 3,
                                     bool intercept_1 = false, bool intercept_2 = false, bool intercept_3 = false);
+*/
 
 
 #endif

@@ -6,6 +6,7 @@
 #include "triebars.h"
 
 
+/*
 double TriEBARS::_birth_1() {
   double p = c * std::min(1.0, std::pow((n_1-k_1)/(k_1+1.0), 1.0-gamma));
   return p;
@@ -442,6 +443,7 @@ RCPP_MODULE(class_TriEBARS) {
 }
 
 RCPP_EXPOSED_CLASS(TriEBARS)
+*/
 
 
 

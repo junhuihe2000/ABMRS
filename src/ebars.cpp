@@ -5,6 +5,8 @@
 
 #include "ebars.h"
 
+
+
 double EBARS::_birth() {
   double p = c * std::min(1.0, std::pow((n-k)/(k+1.0), 1.0-gamma));
   return p;
@@ -228,5 +230,4 @@ RCPP_MODULE(class_EBARS) {
 }
 
 RCPP_EXPOSED_CLASS(EBARS)
-
 

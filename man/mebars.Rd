@@ -71,7 +71,7 @@ An S4 object of class MEBARS with the following methods:
 see \link{ClassMEBARS} for more details about class MEBARS
 }
 \examples{
-library(EBARS)
+library(ABMRS)
 library(splines)
 set.seed(1234)
 # tensor spline
@@ -79,12 +79,11 @@ beta = matrix(rnorm(40,0,1),ncol=1)
 fss <- function(x,y){
   xix = c(0.2,0.3)
   xiy = c(0.5,0.5,0.5,0.5,0.7)
-  B = tensor_spline(cbind(x,y),list(xix,xiy))
+  B = tensor_spline(cbind(x,y),list(xix,xiy), c(3,3), c(FALSE,FALSE))
   return(B\%*\%beta)
 }
 # parameters' configuration
 m_train = 1000; m_test = 200
-burns = 1000; steps = 1000
 noise = 0.1
 # generate train data set
 x_1 = c(runif(m_train-2,0,1),0,1)
@@ -98,11 +97,11 @@ y_new = fss(x_1_new,x_2_new)
 # run suface EBARS
 time_start = Sys.time()
 my_mebars = mebars(cbind(x_1,x_2), y_h)
-my_mebars$mcmc(100,100)
+my_mebars$rjmcmc(100,100)
 time_end = Sys.time()
 time_end - time_start
 pred = my_mebars$predict(cbind(x_1_new,x_2_new))
 y_hat = rowMeans(pred)
-sum((y_new-y_hat)^2)/m_test
+mean((y_new-y_hat)^2)
 
 }

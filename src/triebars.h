@@ -7,6 +7,7 @@
 #include "utils.h"
 
 
+/*
 //' @name ClassTriEBARS
 //' @title trivariate extended Bayesian adaptive regression spline
 //' @description a class of [triebars()]
@@ -70,8 +71,7 @@
    Rcpp::List get_knots(); // return estimated knots
    Rcpp::List get_samples(); // return posterior samples
  };
-
-
+*/
 
 
 

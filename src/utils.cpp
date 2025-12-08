@@ -87,6 +87,7 @@ Eigen::MatrixXd spline(const Eigen::VectorXd & x,
 }
 
 
+/*
 // ------ bivariate spline regression ------
 
 // MLE of bivariate spline regression coefficients
@@ -120,8 +121,10 @@ Eigen::MatrixXd bi_tensor_spline(const Eigen::MatrixXd & x,
   Rcpp::LogicalVector intercepts = {intercept_1, intercept_2};
   return tensor_spline(x, xis, degrees, intercepts);
 }
+*/
 
 
+/*
 Eigen::MatrixXd tri_tensor_spline(const Eigen::MatrixXd & x,
                               const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2, const Eigen::VectorXd & xi_3,
                               int degree_1, int degree_2, int degree_3,
@@ -145,8 +148,10 @@ Rcpp::List cube_spline_regression(const Eigen::MatrixXd & x,
   return Rcpp::List::create(Rcpp::Named("beta")=beta,
                             Rcpp::Named("sigma")=sigma);
 }
+*/
 
 
+/*
 Rcpp::List surface_spline_regression(const Eigen::MatrixXd & x,
                                      const Eigen::VectorXd & y,
                                      const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2,
@@ -169,8 +174,10 @@ Eigen::VectorXd surface_spline_predict(const Eigen::MatrixXd & x_new,
   Eigen::VectorXd y_new = B*beta;
   return y_new;
 }
+*/
 
 
+/*
 Eigen::VectorXd cube_spline_predict(const Eigen::MatrixXd & x_new,
                                        const Eigen::VectorXd & xi_1, const Eigen::VectorXd & xi_2, const Eigen::VectorXd & xi_3,
                                        const Eigen::VectorXd & beta,
@@ -180,6 +187,7 @@ Eigen::VectorXd cube_spline_predict(const Eigen::MatrixXd & x_new,
   Eigen::VectorXd y_new = B*beta;
   return y_new;
 }
+*/
 
 
 
@@ -205,8 +213,8 @@ MLERegression mle_regression(const Eigen::MatrixXd & x,
 //' create a general tensor product spline basis matrix for arbitrary dimensions
 //' @param x a numeric matrix, (m,d), each row indicates a predictor value.
 //' @param xis a list of numeric vectors, each element contains knots for one dimension.
-//' @param degrees an integer vector, degrees for each dimension, default is `c(3,3,...)`.
-//' @param intercepts a logical vector, whether intercepts are included for each dimension, default is `c(FALSE,FALSE,...)`.
+//' @param degrees an integer vector, degrees for each dimension.
+//' @param intercepts a logical vector, whether intercepts are included for each dimension.
 //'
 //' @returns a tensor product B-spline basis matrix.
 //'
@@ -233,19 +241,11 @@ Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
   if(x.cols() != d) {
     throw std::invalid_argument("Input dimension mismatch: x.cols() != number of xis");
   }
-  if(!degrees.empty() && degrees.size() != d) {
+  if(degrees.size() != d) {
     throw std::invalid_argument("Input dimension mismatch: degrees.size() != number of xis");
   }
-  if(intercepts.size() > 0 && intercepts.size() != d) {
+  if(intercepts.size() != d) {
     throw std::invalid_argument("Input dimension mismatch: intercepts.size() != number of xis");
-  }
-
-  // Set default degrees and intercepts if empty
-  if(degrees.empty()) {
-    degrees = std::vector<int>(d, 3); // default degree 3
-  }
-  if(intercepts.size() == 0) {
-    intercepts = Rcpp::LogicalVector(d, false); // default intercept false
   }
   
   // Get R's splines::bs function
@@ -255,7 +255,7 @@ Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
   // Generate B-spline basis for each dimension
   std::vector<Eigen::MatrixXd> bases(d);
   int total_cols = 1;
-  
+
   for(int j = 0; j < d; j++) {
     bases[j] = Rcpp::as<Eigen::MatrixXd>(
       bs(
@@ -278,7 +278,7 @@ Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
     
     // Kronecker product with remaining dimensions
     for(int j = 1; j < d; j++) {
-      row_product = Eigen::kroneckerProduct(row_product, bases[j].row(i));
+      row_product = Eigen::kroneckerProduct(row_product, bases[j].row(i)).eval();
     }
     
     B.row(i) = row_product;

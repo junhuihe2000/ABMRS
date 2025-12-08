@@ -6,6 +6,8 @@
 
 #include "utils.h"
 
+
+
 //' @name ClassEBARS
 //' @title extended Bayesian adaptive regression univariate spline
 //' @description a cpp class

@@ -241,8 +241,8 @@ RCPP_MODULE(class_MEBARS) {
   using namespace Rcpp;
 
   class_<MEBARS>("MEBARS")
-    .constructor<Eigen::VectorXd, Eigen::VectorXd, NumericVector, IntegerVector, List>(
-      "Construct MEBARS object for univariate spline regression"
+    .constructor<Eigen::MatrixXd, Eigen::VectorXd, NumericVector, IntegerVector, List>(
+      "Construct MEBARS object for multivariate spline regression"
     )
     .method("rjmcmc", &MEBARS::rjmcmc, 
       "Run reversible jump MCMC algorithm")

@@ -121,19 +121,12 @@ beta = matrix(rnorm(40,0,1),ncol=1)
 fss <- function(x,y){
   xix = c(0.2,0.5)
   xiy = c(0.4,0.4,0.4,0.4,0.7)
-  B = tensor_spline(cbind(x,y),xix,xiy)
+  B = tensor_spline(cbind(x,y),list(xix,xiy), c(3, 3), c(FALSE, FALSE))
   return(B%*%beta)
 }
 ```
 
-```{r}
-# parameters' configuration
-m_train = 1000
-m_test = 200
-burns = 1000
-steps = 1000
-noise = 0.1
-```
+plot true surface
 
 ```{r}
 x_1_grid <- x_2_grid <- seq(0, 1, length = 50)
@@ -141,79 +134,81 @@ x_1_grid <- x_2_grid <- seq(0, 1, length = 50)
 y_grid <- outer(x_1_grid, x_2_grid, fss)
 # plot the 3D surface
 persp(x_1_grid, x_2_grid, y_grid, xlab="x_1",ylab="x_2",zlab="y",
-      shade=0.75,main="perspective plot of Example 1")
-```
+      shade=0.75,main="perspective plot")
 
-```{r}
 contour(x_1_grid, x_2_grid, y_grid, drawlabels = FALSE)
 ```
 
-```{r}
-image(x_1_grid, x_2_grid, y_grid)
-```
-
-
+generate data
 
 ```{r}
+# parameters' configuration
+m_train = 1000
+m_test = 500
+noise = 0.1
 # generate train data set
 x_1 = c(runif(m_train-2,0,1),0,1)
 x_2 = c(runif(m_train-2,0,1),0,1)
 y = fss(x_1,x_2)
 y_h = y + rnorm(m_train,0,noise)
-```
 
-```{r}
 # generate test set
 x_1_new = runif(m_test,0,1)
 x_2_new = runif(m_test,0,1)
 y_new = fss(x_1_new,x_2_new)
 ```
 
+run MEBARS
+
 ```{r}
-# run suface EBARS
+# run multivariate EBARS
 time_start = Sys.time()
-my_binebars = binebars(cbind(x_1,x_2), y_h)
-my_binebars$mcmc()
+my_mebars = mebars(cbind(x_1,x_2), y_h)
+my_mebars$rjmcmc(burns=5000,steps=5000)
 time_end = Sys.time()
 time_end - time_start
+# Time difference of 2 mins
 ```
+
+plot prediction and uncertainty band
 
 ```{r}
-my_binebars$knots()
+# plot prediction on test set
+pred = my_mebars$predict(cbind(x_1_new,x_2_new))
+y_hat = rowMeans(pred)
+mse = mean((y_hat - y_new)^2)
+cat("MSE on test set:", mse, "\n")
+y_lower = apply(pred,1,quantile,0.025)
+y_upper = apply(pred,1,quantile,0.975)
+coverage = mean((y_new>=y_lower)&(y_new<=y_upper))
+cat("95% CI coverage on test set:", coverage, "\n")
+
+# Faster grid prediction without per-cell outer calls
+mebars_grid <- cbind(rep(x_1_grid, times = length(x_2_grid)),
+                     rep(x_2_grid, each  = length(x_1_grid)))
+mebars_pred  <- my_mebars$predict(mebars_grid)
+y_mebars_hat <- rowMeans(mebars_pred)
+y_mebars <- matrix(y_mebars_hat,
+                   nrow = length(x_1_grid), ncol = length(x_2_grid), 
+                   byrow = FALSE)
+
+contour(x_1_grid, x_2_grid, y_mebars, drawlabels = FALSE)
 ```
 
 
-```{r}
-y_hat = my_binebars$predict(cbind(x_1_new,x_2_new))
-sum((y_new-y_hat)^2)/m_test
-```
-
-```{r}
-ebars_predict <- function(x,y) {
-  return(my_binebars$predict(cbind(x,y)))
-}
-y_binebars = outer(x_1_grid,x_2_grid,ebars_predict)
-```
-
-```{r}
-contour(x_1_grid, x_2_grid, y_binebars, drawlabels = FALSE)
-```
-
-
+other methods for comparison
 
 ```{r}
 # kernel smooth method
 library(sm)
 sm = sm.regression(cbind(x_1,x_2),y_h,method="cv",eval.points=cbind(x_1_new,x_2_new),eval.grid=FALSE)
-sum((y_new-sm$estimate)^2)/m_test
+mean((y_new-sm$estimate)^2)
 ```
 
 ```{r}
 my_sm = sm.regression(cbind(x_1,x_2),y_h,method="cv",eval.points=cbind(rep(x_1_grid,times=50),rep(x_2_grid,each=50)),eval.grid=FALSE)
 y_grid_sm = matrix(my_sm$estimate, 50, 50)
-```
 
-```{r}
 contour(x_1_grid, x_2_grid, y_grid_sm, drawlabels = FALSE)
 ```
 
@@ -224,146 +219,21 @@ df = data.frame(x=x_1,y=x_2,z=y_h)
 locpm = loess(z~x*y,data=df,degree=2,span=0.05)
 #control = loess.control(surface = "direct")
 y_locpm = predict(locpm,cbind(x_1_new,x_2_new))
-sum((y_new-y_locpm)^2)/m_test
+mean((y_new-y_locpm)^2)
 ```
 
 ```{r}
 locp_predict <- function(x,y) {
   return(predict(locpm, cbind(x,y)))
 }
-```
 
-```{r}
 contour(x_1_grid, x_2_grid, outer(x_1_grid,x_2_grid,locp_predict), drawlabels = FALSE)
 ```
 
-# manifold fitting
 
-+ Sine
-```{r}
-set.seed(1234)
-```
+## trivariate fitting
 
 ```{r}
-I=1000                             
-t=runif(I, min = -3*pi, max = 3*pi)
-sd.noise=0.1                       
-e1=rnorm(I,mean = 0,sd=sd.noise)    
-e2=rnorm(I,mean = 0,sd=sd.noise)
-X=matrix(NA,ncol = 2,nrow = I)
-manifold=function(tau){ return(c(tau,sin(tau))) }
-for(i in 1:I){ X[i,]=manifold(t[i]) }
-data.points=X+cbind(e1,e2) 
-```
-
-```{r}
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-```
-
-```{r}
-res = manifold_fitting(x=data.points,d=1)
-```
-
-```{r}
-center = (res$lower+res$upper)/2
-radius = abs(res$upper-res$lower)/2
-x_test = res$map(seq(center-radius*0.99,center+radius*0.99,length.out=500))
-```
-
-```{r}
-plot(data.points[,1], data.points[,2],
-     pch=20, col="grey",
-     main="Principal Manifold Estimation",
-     xlab=" ", ylab=" ")
-lines(x_test[,1],x_test[,2],col="red",type = "l",lwd=3)
-```
-
-+ Spiral in R^2
-```{r}
-set.seed(1234)
-```
-
-```{r}
-I = 1000; I.test = 1000
-theta = seq(0, 6*pi, length.out=I)
-x = cbind(2*(theta+4)^(0.7)*cos(theta), 2*(theta+4)^(0.7)*sin(theta))
-
-sd = 0.3
-xobs = x + cbind(rnorm(I,0,sd), rnorm(I,0,sd))
-```
-
-```{r}
-ggplot() + geom_point(aes(xobs[,1],xobs[,2]),size=0.6,col="red") +
-  theme(axis.title.x=element_blank(),axis.title.y=element_blank())
-```
-
-```{r}
-# EBARS
-time.start = Sys.time()
-result.ebars = manifold_fitting(xobs, d=1)
-time.end = Sys.time()
-print(time.end-time.start)
-```
-
-```{r}
-center = (result.ebars$lower+result.ebars$upper)/2
-radius = abs(result.ebars$upper-result.ebars$lower)/2
-x.ebars = result.ebars$map(seq(center-radius*0.99,center+radius*0.99,length.out=I.test))
-ggplot() + geom_path(aes(x.ebars[,1],x.ebars[,2])) +
-  theme(axis.title.x=element_blank(),axis.title.y=element_blank())
-```
-
-+ space spiral in R^3
-```{r}
-set.seed(1234)
-```
-
-```{r}
-I = 1000; I.test = 1000
-theta = seq(0, 6*pi, length.out=I)
-x = cbind(2*(theta+4)^(0.7)*cos(theta), 2*(theta+4)^(0.7)*sin(theta), -2*(theta+4)^(0.7))
-
-sd = 0.3
-xobs = x + cbind(rnorm(I,0,sd), rnorm(I,0,sd), rnorm(I,0,sd))
-```
-
-```{r}
-scatter3D(xobs[,1], xobs[,2], xobs[,3],
-          theta = 15, phi = 30,
-          pch = 20, box=TRUE, cex = 0.2, colkey = FALSE, 
-          border="black", shade=0.8, 
-          bty = "g", ticktype = "detailed",
-          main="")
-```
-
-```{r}
-# EBARS
-time.start = Sys.time()
-result.ebars = manifold_fitting(xobs, d=1)
-time.end = Sys.time()
-print(time.end-time.start)
-```
-
-```{r}
-center = (result.ebars$lower+result.ebars$upper)/2
-radius = abs(result.ebars$upper-result.ebars$lower)/2
-x.ebars = result.ebars$map(seq(center-radius*0.99,center+radius*0.99,length.out=I.test))
-```
-
-```{r}
-scatter3D(x.ebars[,1], x.ebars[,2], x.ebars[,3],
-          theta = 15, phi = 30, col = "black",
-          pch = 20, box=TRUE, cex = 0.2, colkey = FALSE, 
-          border="black", shade=0.8, 
-          bty = "g", ticktype = "detailed",
-          main="")
-```
-
-```{r}
-library(splines)
 set.seed(1234)
 #tensor spline
 beta = matrix(rnorm(200,0,1),ncol=1)
@@ -371,15 +241,16 @@ xix = c(0.2,0.3)
 xiy = c(0.5,0.5,0.5,0.5,0.7)
 xiz = c(0.4,0.6)
 fss <- function(x,y,z){
-B = tri_tensor_spline(cbind(x,y,z),xix,xiy,xiz)
+B = tensor_spline(cbind(x,y,z),list(xix,xiy,xiz), c(3, 3, 3), c(FALSE, FALSE, FALSE))
 return(B%*%beta)
 }
 ```
 
+generate data
+
 ```{r}
 # parameters' configuration
-m_train = 1000; m_test = 200
-burns = 1000; steps = 1000
+m_train = 1000; m_test = 500
 noise = 0.1
 # generate train data set
 x_1 = c(runif(m_train-2,0,1),0,1)
@@ -394,14 +265,29 @@ x_3_new = runif(m_test,0,1)
 y_new = fss(x_1_new,x_2_new,x_3_new)
 ```
 
+run MEBARS
+
 ```{r}
-# run cube EBARS
+# run multivariate EBARS
 time_start = Sys.time()
-my_triebars = triebars(cbind(x_1,x_2,x_3), y_h, k_1 = 2, k_2 = 5, k_3 = 2)
-my_triebars$mcmc(10,10)
+my_mebars = mebars(cbind(x_1,x_2,x_3), y_h, ks = c(2,5,2))
+my_mebars$rjmcmc(burns=1000,steps=1000)
 time_end = Sys.time()
 time_end - time_start
-y_hat = my_triebars$predict(cbind(x_1_new,x_2_new,x_3_new))
-sum((y_new-y_hat)^2)/m_test
+# Time difference of 10 mins
+```
+
+plot prediction and uncertainty band
+
+```{r}
+# plot prediction on test set
+pred = my_mebars$predict(cbind(x_1_new,x_2_new,x_3_new))
+y_hat = rowMeans(pred)
+mse = mean((y_hat - y_new)^2)
+cat("MSE on test set:", mse, "\n")
+y_lower = apply(pred,1,quantile,0.025)
+y_upper = apply(pred,1,quantile,0.975)
+coverage = mean((y_new>=y_lower)&(y_new<=y_upper))
+cat("95% CI coverage on test set:", coverage, "\n")
 ```
 

@@ -1,5 +1,5 @@
-Package: EBARS
-Title: Extended Bayesian information criterion for multivariate spline knot inference
+Package: ABMRS
+Title: Adaptive Bayesian multivariate regression splines
 Version: 0.0.0.9000
 Authors@R: 
     person("Junhui", "He", , "hejh22@mails.tsinghua.edu.cn", role = c("aut", "cre"))
@@ -7,7 +7,7 @@ Description: An algorithm for extended Bayesian adaptive regression splines.
   We propose a fully Bayesian approach for knot inference in multivariate spline regression. 
   The knot inference is of interest in many problems, such as change point detection. 
   You can estimate the knot number and location simultaneously and accurately 
-  by the proposed method in univariate or bivariate splines.
+  by the proposed method in univariate or multivariate splines.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

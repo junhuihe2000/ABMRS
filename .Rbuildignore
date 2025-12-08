@@ -1,4 +1,6 @@
-^EBARS\.Rproj$
+^ABMRS\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^README\.Rmd$
+^\.vscode$
+^\.vscode/.*
