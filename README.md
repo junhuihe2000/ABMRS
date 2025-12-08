@@ -49,11 +49,6 @@ This is a basic example which shows you how to make knot inference:
 
 ``` r
 library(ABMRS)
-#> 
-#> Attaching package: 'ABMRS'
-#> The following object is masked from 'package:stats':
-#> 
-#>     spline
 library(splines)
 library(ggplot2)
 #> Warning: package 'ggplot2' was built under R version 4.3.3

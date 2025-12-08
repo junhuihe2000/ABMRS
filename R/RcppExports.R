@@ -25,18 +25,6 @@ NULL
 #' @field resids get posterior samples of residual standard deviations
 NULL
 
-#' create a univariate B-spline basis matrix
-#' @param x a numeric vector of predictor values.
-#' @param xi a numeric vector, indicates the knots.
-#' @param degree int, the degree of polynomial, default value is `3`.
-#' @param intercept bool, whether the intercept is included in the basis, default value is `FALSE`.
-#'
-#' @returns a B-spline basis matrix.
-#' @export
-spline <- function(x, xi, degree, intercept) {
-    .Call(`_ABMRS_spline`, x, xi, degree, intercept)
-}
-
 #' create a general tensor product spline basis matrix for arbitrary dimensions
 #' @param x a numeric matrix, (m,d), each row indicates a predictor value.
 #' @param xis a list of numeric vectors, each element contains knots for one dimension.

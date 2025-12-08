@@ -2,7 +2,6 @@
 
 export(ebars)
 export(mebars)
-export(spline)
 export(tensor_spline)
 import(RcppEigen)
 importFrom(Rcpp,evalCpp)

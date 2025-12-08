@@ -11,20 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// spline
-Eigen::MatrixXd spline(const Eigen::VectorXd& x, const Eigen::VectorXd& xi, int degree, bool intercept);
-RcppExport SEXP _ABMRS_spline(SEXP xSEXP, SEXP xiSEXP, SEXP degreeSEXP, SEXP interceptSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type xi(xiSEXP);
-    Rcpp::traits::input_parameter< int >::type degree(degreeSEXP);
-    Rcpp::traits::input_parameter< bool >::type intercept(interceptSEXP);
-    rcpp_result_gen = Rcpp::wrap(spline(x, xi, degree, intercept));
-    return rcpp_result_gen;
-END_RCPP
-}
 // tensor_spline
 Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd& x, const std::vector<Eigen::VectorXd>& xis, std::vector<int> degrees, Rcpp::LogicalVector intercepts);
 RcppExport SEXP _ABMRS_tensor_spline(SEXP xSEXP, SEXP xisSEXP, SEXP degreesSEXP, SEXP interceptsSEXP) {
@@ -44,7 +30,6 @@ RcppExport SEXP _rcpp_module_boot_class_EBARS();
 RcppExport SEXP _rcpp_module_boot_class_MEBARS();
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_ABMRS_spline", (DL_FUNC) &_ABMRS_spline, 4},
     {"_ABMRS_tensor_spline", (DL_FUNC) &_ABMRS_tensor_spline, 4},
     {"_rcpp_module_boot_class_EBARS", (DL_FUNC) &_rcpp_module_boot_class_EBARS, 0},
     {"_rcpp_module_boot_class_MEBARS", (DL_FUNC) &_rcpp_module_boot_class_MEBARS, 0},

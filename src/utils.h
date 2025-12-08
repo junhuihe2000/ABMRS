@@ -37,7 +37,7 @@ Eigen::VectorXd spline_predict(const Eigen::VectorXd & x_new, const Eigen::Vecto
                                int degree = 3, bool intercept = false);
 */
 
-// generate B-spline basis matrix
+// generate a univariate B-spline basis matrix
 Eigen::MatrixXd spline(const Eigen::VectorXd & x, const Eigen::VectorXd & xi,
                        int degree = 3, bool intercept = false);
 

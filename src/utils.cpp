@@ -58,15 +58,6 @@ Eigen::VectorXd spline_predict(const Eigen::VectorXd & x_new, const Eigen::Vecto
 */
 
 
-//' create a univariate B-spline basis matrix
-//' @param x a numeric vector of predictor values.
-//' @param xi a numeric vector, indicates the knots.
-//' @param degree int, the degree of polynomial, default value is `3`.
-//' @param intercept bool, whether the intercept is included in the basis, default value is `FALSE`.
-//'
-//' @returns a B-spline basis matrix.
-//' @export
-// [[Rcpp::export(spline)]]
 Eigen::MatrixXd spline(const Eigen::VectorXd & x,
                        const Eigen::VectorXd & xi,
                        int degree, bool intercept) {
