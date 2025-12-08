@@ -15,7 +15,6 @@ library(splines)
 library(ggplot2)
 ```
 
-
 ```{r}
 Rcpp::sourceCpp(code='
 // [[Rcpp::depends(RcppEigen)]]

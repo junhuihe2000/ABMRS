@@ -1,14 +1,152 @@
-* using log directory ‘/Users/hjh/PhD/EBARS/ABMRS/..Rcheck’
-* using R version 4.3.1 (2023-06-16)
-* using platform: aarch64-apple-darwin20 (64-bit)
+* using log directory 'G:/HeJunhui/research/2023/ABMRS/..Rcheck'
+* using R version 4.4.2 (2024-10-31 ucrt)
+* using platform: x86_64-w64-mingw32
 * R was compiled by
-    Apple clang version 14.0.0 (clang-1400.0.29.202)
-    GNU Fortran (GCC) 12.2.0
-* running under: macOS 15.6.1
+    gcc.exe (GCC) 13.3.0
+    GNU Fortran (GCC) 13.3.0
+* running under: Windows 11 x64 (build 26200)
 * using session charset: UTF-8
-* using option ‘--as-cran’
-* checking for file ‘./DESCRIPTION’ ... ERROR
-Required fields missing or empty:
-  ‘Author’ ‘Maintainer’
+* using option '--as-cran'
+* checking for file './DESCRIPTION' ... OK
+* this is package 'ABMRS' version '0.1.0'
+* package encoding: UTF-8
+* checking CRAN incoming feasibility ... [11s] NOTE
+Maintainer: 'Junhui He <hejh22@mails.tsinghua.edu.cn>'
+
+New submission
+
+The build time stamp is missing.
+* checking package namespace information ... OK
+* checking package dependencies ... OK
+* checking if this is a source package ... WARNING
+Subdirectory 'ABMRS/src' contains apparent object files/libraries
+  ABMRS.dll
+Object files/libraries should not be included in a source package.
+
+In addition to the above warning(s), found the following notes:
+
+Found the following apparent object files/libraries:
+  ABMRS.Rcheck/00_pkg_src/ABMRS/src/ABMRS.dll
+  ABMRS.Rcheck/00_pkg_src/ABMRS/src/RcppExports.o
+  ABMRS.Rcheck/00_pkg_src/ABMRS/src/binebars.o
+  ABMRS.Rcheck/00_pkg_src/ABMRS/src/ebars.o
+  ABMRS.Rcheck/00_pkg_src/ABMRS/src/mebars.o
+  ABMRS.Rcheck/00_pkg_src/ABMRS/src/triebars.o
+  ABMRS.Rcheck/00_pkg_src/ABMRS/src/utils.o
+  ABMRS.Rcheck/ABMRS/libs/x64/ABMRS.dll
+Object files/libraries should not be included in a source package.
+
+Subdirectory 'ABMRS.Rcheck/ABMRS' seems to contain an installed version of the package.
+* checking if there is a namespace ... OK
+* checking for executable files ... WARNING
+Found the following executable files:
+  ABMRS.Rcheck/00_pkg_src/ABMRS/src/ABMRS.dll
+  ABMRS.Rcheck/ABMRS/libs/x64/ABMRS.dll
+  src/ABMRS.dll
+Source packages should not contain undeclared executable files.
+See section 'Package structure' in the 'Writing R Extensions' manual.
+* checking for hidden files and directories ... NOTE
+Found the following hidden files and directories:
+  .Rhistory
+  .gitignore
+  src/.gitignore
+  ..Rcheck
+  .Rproj.user
+  .git
+  .vscode
+These were most likely included in error. See section 'Package
+structure' in the 'Writing R Extensions' manual.
+
+CRAN-pack does not know about
+  ..Rcheck
+  .git
+  .vscode
+* checking for portable file names ... OK
+* checking serialization versions ... WARNING
+Found file(s) with version 3 serialization:
+  'ABMRS.Rcheck/ABMRS/Meta/Rd.rds'
+  'ABMRS.Rcheck/ABMRS/Meta/features.rds'
+  'ABMRS.Rcheck/ABMRS/Meta/hsearch.rds'
+  'ABMRS.Rcheck/ABMRS/Meta/links.rds'
+  'ABMRS.Rcheck/ABMRS/Meta/nsInfo.rds'
+  'ABMRS.Rcheck/ABMRS/Meta/package.rds'
+  'ABMRS.Rcheck/ABMRS/R/ABMRS.rdx' 'ABMRS.Rcheck/ABMRS/help/ABMRS.rdx'
+  'ABMRS.Rcheck/ABMRS/help/aliases.rds'
+  'ABMRS.Rcheck/ABMRS/help/paths.rds'
+Such files are only readable in R >= 3.5.0.
+Recreate them with R < 3.5.0 or save(version = 2) or saveRDS(version =
+2) as appropriate
+* checking whether package 'ABMRS' can be installed ... [26s] OK
+* used C++ compiler: 'G__~1.EXE (GCC) 13.3.0'
+* checking installed package size ... OK
+* checking package directory ... OK
+* checking for future file timestamps ... NOTE
+unable to verify current time
+* checking DESCRIPTION meta-information ... NOTE
+Checking should be performed on sources prepared by 'R CMD build'.
+* checking top-level files ... NOTE
+Non-standard files/directories found at top level:
+  'ABMRS.Rcheck' 'ABMRS.Rproj' 'ABMRS_0.1.0.tar.gz' 'LICENSE.md'
+  'README.Rmd'
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... WARNING
+Found the following directories with names of check directories:
+  ./..Rcheck
+  ./ABMRS.Rcheck
+Most likely, these were included erroneously.
+Found the following directory with the name of a version control directory:
+  ./.git
+These should not be in a package tarball.
+* checking code files for non-ASCII characters ... OK
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking use of S3 registration ... OK
+* checking dependencies in R code ... OK
+* checking S3 generic/method consistency ... OK
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... OK
+* checking Rd files ... OK
+* checking Rd metadata ... OK
+* checking Rd line widths ... OK
+* checking Rd cross-references ... OK
+* checking for missing documentation entries ... OK
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... OK
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... OK
+* checking line endings in C/C++/Fortran sources/headers ... NOTE
+Found the following sources/headers with CR or CRLF line endings:
+  src/RcppExports.cpp
+  src/binebars.cpp
+  src/binebars.h
+  src/ebars.cpp
+  src/ebars.h
+  src/mebars.cpp
+  src/mebars.h
+  src/triebars.cpp
+  src/triebars.h
+  src/utils.cpp
+  src/utils.h
+Some Unix compilers require LF line endings.
+* checking line endings in Makefiles ... OK
+* checking compilation flags in Makevars ... OK
+* checking for GNU extensions in Makefiles ... OK
+* checking for portable use of $(BLAS_LIBS) and $(LAPACK_LIBS) ... OK
+* checking use of PKG_*FLAGS in Makefiles ... OK
+* checking use of SHLIB_OPENMP_*FLAGS in Makefiles ... OK
+* checking pragmas in C/C++ headers and code ... OK
+* checking compilation flags used ... OK
+* checking compiled code ... OK
+* checking examples ... OK
+* checking PDF version of manual ... OK
+* checking HTML version of manual ... OK
+* checking for non-standard things in the check directory ... OK
+* checking for detritus in the temp directory ... OK
 * DONE
-Status: 1 ERROR
+Status: 4 WARNINGs, 6 NOTEs
