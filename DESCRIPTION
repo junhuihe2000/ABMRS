@@ -1,8 +1,8 @@
 Package: ABMRS
-Title: Adaptive Bayesian multivariate regression splines
-Version: 0.0.0.9000
-Authors@R: 
-    person("Junhui", "He", , "hejh22@mails.tsinghua.edu.cn", role = c("aut", "cre"))
+Title: Adaptive Bayesian Multivariate Regression Splines
+Version: 0.1.0
+Author: Junhui He [aut, cre]
+Maintainer: Junhui He <hejh22@mails.tsinghua.edu.cn>
 Description: An algorithm for extended Bayesian adaptive regression splines. 
   We propose a fully Bayesian approach for knot inference in multivariate spline regression. 
   The knot inference is of interest in many problems, such as change point detection. 
@@ -17,7 +17,6 @@ Suggests:
 Config/testthat/edition: 3
 Imports: 
     Rcpp,
-    RcppEigen,
     splines,
     methods
 LinkingTo:
