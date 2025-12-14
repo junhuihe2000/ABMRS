@@ -30,6 +30,8 @@ NULL
 #' @param xis a list of numeric vectors, each element contains knots for one dimension.
 #' @param degrees an integer vector, degrees for each dimension.
 #' @param intercepts a logical vector, whether intercepts are included for each dimension.
+#' @param xmin a numeric vector, minimum boundary for each input dimension.
+#' @param xmax a numeric vector, maximum boundary for each input dimension.
 #'
 #' @returns a tensor product B-spline basis matrix.
 #'
@@ -37,14 +39,18 @@ NULL
 #' @examples
 #' # 2D example
 #' x <- matrix(runif(100), ncol=2)
+#' xmin <- c(0,0)
+#' xmax <- c(1,1)
 #' xis <- list(c(0.3, 0.6), c(0.4, 0.5))
-#' B <- tensor_spline(x, xis, c(3,3), c(FALSE,FALSE))
+#' B <- tensor_spline(x, xis, c(3,3), c(FALSE,FALSE), xmin, xmax)
 #' 
 #' # 3D example
 #' x <- matrix(runif(150), ncol=3)
+#' xmin <- c(0,0,0)
+#' xmax <- c(1,1,1)
 #' xis <- list(c(0.2, 0.5), c(0.3, 0.7), c(0.4))
-#' B <- tensor_spline(x, xis, c(3,3,3), c(TRUE,TRUE,TRUE))
-tensor_spline <- function(x, xis, degrees, intercepts) {
-    .Call(`_ABMRS_tensor_spline`, x, xis, degrees, intercepts)
+#' B <- tensor_spline(x, xis, c(3,3,3), c(TRUE,TRUE,TRUE), xmin, xmax)
+tensor_spline <- function(x, xis, degrees, intercepts, xmin, xmax) {
+    .Call(`_ABMRS_tensor_spline`, x, xis, degrees, intercepts, xmin, xmax)
 }
 

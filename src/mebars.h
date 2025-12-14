@@ -27,6 +27,7 @@ private:
   std::vector<int> degrees; // the degree of polynomials
   double gamma, c; // constants
   Eigen::RowVectorXd xmin, xmax; // range of x
+  Eigen::RowVectorXd tmin, tmax; // range of t
   Rcpp::LogicalVector fix_ks; // whether k is given and fixed
   Rcpp::LogicalVector intercepts; // whether an intercept is included in the basis
 
@@ -62,6 +63,7 @@ private:
 public:
   // initialize MEBARS
   MEBARS(const Eigen::MatrixXd & _x, const Eigen::VectorXd & _y,
+         const Eigen::RowVectorXd & _xmin, const Eigen::RowVectorXd & _xmax,
          Rcpp::NumericVector _para,
          Rcpp::IntegerVector _num,
          Rcpp::List _spline);

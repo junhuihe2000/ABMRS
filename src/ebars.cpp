@@ -31,7 +31,7 @@ void EBARS::_knots() {
   }
 }
 
-EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
+EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y, double _xmin, double _xmax,
              Rcpp::NumericVector _para, Rcpp::IntegerVector _num, Rcpp::List _spline) {
   x = _x; y = _y;
   gamma = _para(0); c = _para(1);
@@ -49,13 +49,16 @@ EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
   intercept = _spline["intercept"];
 
   // transform x to t
-  xmin = x.minCoeff(); xmax = x.maxCoeff();
+  // xmin = x.minCoeff(); xmax = x.maxCoeff();
+  xmin = _xmin; xmax = _xmax;
   t = (x.array()-xmin)/(xmax-xmin);
+  tmin = 0.0;
+  tmax = 1.0;
 
   _knots();
   _initial();
   // maximum likelihood estimation
-  MLERegression mle = mle_regression(t, y, xi, degree, intercept);
+  MLERegression mle = mle_regression(t, y, xi, degree, intercept, tmin, tmax);
   beta_mle = mle.beta;
   sigma_mle = mle.sigma;
   U_chol = mle.llt.matrixU(); // Store the upper triangular factor
@@ -138,7 +141,7 @@ void EBARS::_update() {
   }
 
   // compute MLE
-  MLERegression mle_new = mle_regression(t, y, xi_new, degree, intercept);
+  MLERegression mle_new = mle_regression(t, y, xi_new, degree, intercept, tmin, tmax);
   Eigen::VectorXd beta_mle_new = mle_new.beta;
   double sigma_mle_new = mle_new.sigma;
   Eigen::MatrixXd U_chol_new = mle_new.llt.matrixU();
@@ -189,7 +192,7 @@ Eigen::MatrixXd EBARS::predict(const Eigen::VectorXd & x_new) {
   for(int i=0;i<xis.length();i++) {
     Eigen::VectorXd xi_sample = Rcpp::as<Eigen::VectorXd>(_xis[i]);
     Eigen::VectorXd beta_sample = Rcpp::as<Eigen::VectorXd>(betas[i]);
-    Eigen::MatrixXd B = spline(t_new, xi_sample, degree, intercept);
+    Eigen::MatrixXd B = spline(t_new, xi_sample, degree, intercept, tmin, tmax);
     Eigen::VectorXd y_pred = B * beta_sample;
     predictions.col(i) = y_pred;
   }
@@ -213,7 +216,7 @@ RCPP_MODULE(class_EBARS) {
   using namespace Rcpp;
 
   class_<EBARS>("EBARS")
-    .constructor<Eigen::VectorXd, Eigen::VectorXd, NumericVector, IntegerVector, List>(
+    .constructor<Eigen::VectorXd, Eigen::VectorXd, double, double, NumericVector, IntegerVector, List>(
       "Construct EBARS object for univariate spline regression"
     )
     .method("rjmcmc", &EBARS::rjmcmc, 

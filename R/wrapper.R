@@ -9,6 +9,8 @@
 #'
 #' @param x a numeric vector, indicates the predictor values.
 #' @param y a numeric vector, indicates the response values, the same length as x.
+#' @param xmin double, the minimum value of predictor, default is `min(x)`.
+#' @param xmax double, the maximum value of predictor, default is `max(x)`.
 #' @param gamma double, the exponent in extended BIC, default value is `1.0`.
 #' It should be greater than 0.
 #' @param c double, the constant affects the proposal distribution in MCMC,
@@ -25,8 +27,8 @@
 #' \describe{
 #'   \item{\code{rjmcmc(burns, steps)}}{Run reversible jump MCMC algorithm.
 #'     \itemize{
-#'       \item \code{burns}: Number of burn-in iterations
-#'       \item \code{steps}: Number of posterior sampling iterations
+#'       \item \code{burns}: Number of burn-in iterations, standard value is `5000`.
+#'       \item \code{steps}: Number of posterior sampling iterations, standard value is `5000`.
 #'     }}
 #'   \item{\code{predict(x_new)}}{Predict response values for new data.
 #'     \itemize{
@@ -62,8 +64,8 @@
 #' y_h = y + rnorm(m,0,0.05)
 #'
 #' # run EBARS
-#' a = ebars(x,y_h,c=0.3,times = 2)
-#' a$rjmcmc(burns=2000,steps=2000)
+#' a = ebars(x,y_h,times = 2)
+#' a$rjmcmc(burns=1000,steps=1000)
 #'
 #' # generate test data set
 #' m_new = 50
@@ -72,9 +74,16 @@
 #' pred = a$predict(x_new)
 #' y_hat = rowMeans(pred)
 #'
-ebars <- function(x, y, gamma = 1.0, c = 0.3, times = 3,
+ebars <- function(x, y, xmin = NULL, xmax = NULL, gamma = 1.0, c = 0.3, times = 3,
                   k = -1, n = -1, degree = 3, intercept = TRUE) {
-  obj <- EBARS$new(x, y, c(gamma, c, times), c(k, n), 
+  if (is.null(xmin)) {
+    xmin <- min(x)
+  }
+  if (is.null(xmax)) {
+    xmax <- max(x)
+  }
+  
+  obj <- EBARS$new(x, y, xmin, xmax, c(gamma, c, times), c(k, n), 
                    list("degree" = degree, "intercept" = intercept))
   
   return(obj)
@@ -90,6 +99,10 @@ ebars <- function(x, y, gamma = 1.0, c = 0.3, times = 3,
 #'
 #' @param x a numeric matrix, indicates the predictor values, each column is a predictor.
 #' @param y a numeric vector, indicates the response values.
+#' @param xmin a double vector with the length `ncol(x)`, the minimum values of predictors,
+#' default is `apply(x, 2, min)`.
+#' @param xmax a double vector with the length `ncol(x)`, the maximum values of predictors,
+#' default is `apply(x, 2, max)`.
 #' @param gamma double, the exponent in extended BIC, default value is `1.0`.
 #' It should be greater than 0.
 #' @param c double, the constant affects the proposal distribution in MCMC,
@@ -106,8 +119,8 @@ ebars <- function(x, y, gamma = 1.0, c = 0.3, times = 3,
 #' \describe{
 #'   \item{\code{rjmcmc(burns, steps)}}{Run reversible jump MCMC algorithm.
 #'     \itemize{
-#'       \item \code{burns}: Number of burn-in iterations
-#'       \item \code{steps}: Number of posterior sampling iterations
+#'       \item \code{burns}: Number of burn-in iterations, standard value is `20000`
+#'       \item \code{steps}: Number of posterior sampling iterations, standard value is `20000`
 #'     }}
 #'   \item{\code{predict(x_new)}}{Predict response values for new data.
 #'     \itemize{
@@ -162,9 +175,15 @@ ebars <- function(x, y, gamma = 1.0, c = 0.3, times = 3,
 #' y_hat = rowMeans(pred)
 #' mean((y_new-y_hat)^2)
 #'
-mebars <- function(x, y, gamma = 1.0, c = 0.3, times = NULL,
+mebars <- function(x, y, xmin = NULL, xmax = NULL, gamma = 1.0, c = 0.3, times = NULL,
                    ks = NULL, ns = NULL, degrees = NULL, intercepts = NULL) {
   d <- ncol(x)
+  if (is.null(xmin)) {
+    xmin <- apply(x, 2, min)
+  }
+  if (is.null(xmax)) {
+    xmax <- apply(x, 2, max)
+  }
   if (is.null(times)) {
     times <- rep(3, d)
   }
@@ -182,7 +201,7 @@ mebars <- function(x, y, gamma = 1.0, c = 0.3, times = NULL,
   }
 
 
-  obj <- MEBARS$new(x, y, c(gamma, c, times), c(ks, ns), 
+  obj <- MEBARS$new(x, y, xmin, xmax, c(gamma, c, times), c(ks, ns), 
                    list("degrees" = degrees, "intercepts" = intercepts))
   
   return(obj)

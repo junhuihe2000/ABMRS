@@ -7,6 +7,8 @@
 mebars(
   x,
   y,
+  xmin = NULL,
+  xmax = NULL,
   gamma = 1,
   c = 0.3,
   times = NULL,
@@ -20,6 +22,12 @@ mebars(
 \item{x}{a numeric matrix, indicates the predictor values, each column is a predictor.}
 
 \item{y}{a numeric vector, indicates the response values.}
+
+\item{xmin}{a double vector with the length \code{ncol(x)}, the minimum values of predictors,
+default is \code{apply(x, 2, min)}.}
+
+\item{xmax}{a double vector with the length \code{ncol(x)}, the maximum values of predictors,
+default is \code{apply(x, 2, max)}.}
 
 \item{gamma}{double, the exponent in extended BIC, default value is \code{1.0}.
 It should be greater than 0.}
@@ -45,8 +53,8 @@ An S4 object of class MEBARS with the following methods:
 \describe{
 \item{\code{rjmcmc(burns, steps)}}{Run reversible jump MCMC algorithm.
 \itemize{
-\item \code{burns}: Number of burn-in iterations
-\item \code{steps}: Number of posterior sampling iterations
+\item \code{burns}: Number of burn-in iterations, standard value is \code{20000}
+\item \code{steps}: Number of posterior sampling iterations, standard value is \code{20000}
 }}
 \item{\code{predict(x_new)}}{Predict response values for new data.
 \itemize{

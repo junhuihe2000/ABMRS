@@ -27,6 +27,7 @@ private:
   int degree; // the degree of polynomials
   double gamma, c; // constants
   double xmin, xmax; // range of x
+  double tmin, tmax; // range of t
   bool fix_k; // whether k is given and fixed
   bool intercept; // whether an intercept is included in the basis
 
@@ -62,6 +63,7 @@ private:
 public:
   // initialize EBARS
   EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
+        double _xmin, double _xmax,
         Rcpp::NumericVector _para,
         Rcpp::IntegerVector _num,
         Rcpp::List _spline);

@@ -1,4 +1,4 @@
-* using log directory ‘/Users/hjh/PhD/EBARS/ABMRS/..Rcheck’
+* using log directory ‘/Users/hjh/PhD/ABMRS/ABMRS/..Rcheck’
 * using R version 4.3.1 (2023-06-16)
 * using platform: aarch64-apple-darwin20 (64-bit)
 * R was compiled by
@@ -6,7 +6,6 @@
     GNU Fortran (GCC) 12.2.0
 * running under: macOS 15.6.1
 * using session charset: UTF-8
-* using option ‘--as-cran’
 * checking for file ‘./DESCRIPTION’ ... ERROR
 Required fields missing or empty:
   ‘Author’ ‘Maintainer’

@@ -9,9 +9,10 @@
 
 // MLE of univariate spline regression coefficients
 MLERegression mle_regression(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
-                             const Eigen::VectorXd & xi, int degree, bool intercept) {
+                             const Eigen::VectorXd & xi, int degree, bool intercept,
+                             double xmin, double xmax) {
   // generate B-spline design matrix
-  Eigen::MatrixXd B = spline(x, xi, degree, intercept);
+  Eigen::MatrixXd B = spline(x, xi, degree, intercept, xmin, xmax);
   double m = B.rows();
   // compute MLE
   Eigen::LLT<Eigen::MatrixXd> llt(B.transpose()*B + 1e-8*Eigen::MatrixXd::Identity(B.cols(), B.cols()));
@@ -60,7 +61,8 @@ Eigen::VectorXd spline_predict(const Eigen::VectorXd & x_new, const Eigen::Vecto
 
 Eigen::MatrixXd spline(const Eigen::VectorXd & x,
                        const Eigen::VectorXd & xi,
-                       int degree, bool intercept) {
+                       int degree, bool intercept,
+                       double xmin, double xmax) {
   // generate B-spline design matrix
   Rcpp::Environment splines = Rcpp::Environment::namespace_env("splines");
   Rcpp::Function bs = splines["bs"];
@@ -71,7 +73,7 @@ Eigen::MatrixXd spline(const Eigen::VectorXd & x,
       Rcpp::Named("knots")=Rcpp::wrap(xi),
       Rcpp::Named("degree")=degree,
       Rcpp::Named("intercept")=intercept,
-      Rcpp::Named("Boundary.knots")=Rcpp::NumericVector::create(0.0,1.0)
+      Rcpp::Named("Boundary.knots")=Rcpp::NumericVector::create(xmin,xmax)
     )
   );
   return B;
@@ -189,9 +191,11 @@ MLERegression mle_regression(const Eigen::MatrixXd & x,
                              const Eigen::VectorXd & y,
                              const std::vector<Eigen::VectorXd> & xis,
                              const std::vector<int> & degrees,
-                             const Rcpp::LogicalVector & intercepts) {
+                             const Rcpp::LogicalVector & intercepts,
+                             const Eigen::RowVectorXd & xmin,
+                             const Eigen::RowVectorXd & xmax) {
   // generate B-spline design matrix
-  Eigen::MatrixXd B = tensor_spline(x, xis, degrees, intercepts);
+  Eigen::MatrixXd B = tensor_spline(x, xis, degrees, intercepts, xmin, xmax);
   double m = B.rows();
   // compute MLE
   Eigen::LLT<Eigen::MatrixXd> llt(B.transpose()*B + 1e-8*Eigen::MatrixXd::Identity(B.cols(), B.cols()));
@@ -206,6 +210,8 @@ MLERegression mle_regression(const Eigen::MatrixXd & x,
 //' @param xis a list of numeric vectors, each element contains knots for one dimension.
 //' @param degrees an integer vector, degrees for each dimension.
 //' @param intercepts a logical vector, whether intercepts are included for each dimension.
+//' @param xmin a numeric vector, minimum boundary for each input dimension.
+//' @param xmax a numeric vector, maximum boundary for each input dimension.
 //'
 //' @returns a tensor product B-spline basis matrix.
 //'
@@ -213,18 +219,24 @@ MLERegression mle_regression(const Eigen::MatrixXd & x,
 //' @examples
 //' # 2D example
 //' x <- matrix(runif(100), ncol=2)
+//' xmin <- c(0,0)
+//' xmax <- c(1,1)
 //' xis <- list(c(0.3, 0.6), c(0.4, 0.5))
-//' B <- tensor_spline(x, xis, c(3,3), c(FALSE,FALSE))
+//' B <- tensor_spline(x, xis, c(3,3), c(FALSE,FALSE), xmin, xmax)
 //' 
 //' # 3D example
 //' x <- matrix(runif(150), ncol=3)
+//' xmin <- c(0,0,0)
+//' xmax <- c(1,1,1)
 //' xis <- list(c(0.2, 0.5), c(0.3, 0.7), c(0.4))
-//' B <- tensor_spline(x, xis, c(3,3,3), c(TRUE,TRUE,TRUE))
+//' B <- tensor_spline(x, xis, c(3,3,3), c(TRUE,TRUE,TRUE), xmin, xmax)
 // [[Rcpp::export(tensor_spline)]]
 Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
                               const std::vector<Eigen::VectorXd> & xis,
                               std::vector<int> degrees,
-                              Rcpp::LogicalVector intercepts) {
+                              Rcpp::LogicalVector intercepts,
+                              const Eigen::RowVectorXd & xmin,
+                              const Eigen::RowVectorXd & xmax) {
   int d = xis.size(); // number of dimensions
   int m = x.rows();   // number of observations
 
@@ -237,6 +249,9 @@ Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
   }
   if(intercepts.size() != d) {
     throw std::invalid_argument("Input dimension mismatch: intercepts.size() != number of xis");
+  }
+  if(xmin.size() != d || xmax.size() != d) {
+    throw std::invalid_argument("Input dimension mismatch: xmin/xmax.size() != number of xis");
   }
   
   // Get R's splines::bs function
@@ -254,7 +269,7 @@ Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
         Rcpp::Named("knots") = Rcpp::wrap(xis[j]),
         Rcpp::Named("degree") = degrees[j],
         Rcpp::Named("intercept") = intercepts[j],
-        Rcpp::Named("Boundary.knots") = Rcpp::NumericVector::create(0.0, 1.0)
+        Rcpp::Named("Boundary.knots") = Rcpp::NumericVector::create(xmin[j], xmax[j])
       )
     );
     total_cols *= bases[j].cols();

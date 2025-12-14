@@ -34,7 +34,8 @@ void MEBARS::_knots() {
 }
 
 MEBARS::MEBARS(const Eigen::MatrixXd & _x, const Eigen::VectorXd & _y,
-             Rcpp::NumericVector _para, Rcpp::IntegerVector _num, Rcpp::List _spline) {
+               const Eigen::RowVectorXd & _xmin, const Eigen::RowVectorXd & _xmax,
+               Rcpp::NumericVector _para, Rcpp::IntegerVector _num, Rcpp::List _spline) {
   x = _x; y = _y;
   gamma = _para(0); c = _para(1);
   m = _y.size(); d = x.cols();
@@ -58,13 +59,16 @@ MEBARS::MEBARS(const Eigen::MatrixXd & _x, const Eigen::VectorXd & _y,
   intercepts = Rcpp::as<Rcpp::LogicalVector>(_spline["intercepts"]);
 
   // transform x to t
-  xmin = x.colwise().minCoeff(); xmax = x.colwise().maxCoeff();
+  // xmin = x.colwise().minCoeff(); xmax = x.colwise().maxCoeff();
+  xmin = _xmin; xmax = _xmax;
   t = (x.rowwise() - xmin).array().rowwise() / (xmax-xmin).array();
+  tmin = Eigen::RowVectorXd::Zero(d);
+  tmax = Eigen::RowVectorXd::Ones(d);
 
   _knots();
   _initial();
   // maximum likelihood estimation
-  MLERegression mle = mle_regression(t, y, xi, degrees, intercepts);
+  MLERegression mle = mle_regression(t, y, xi, degrees, intercepts, tmin, tmax);
   beta_mle = mle.beta;
   sigma_mle = mle.sigma;
   U_chol = mle.llt.matrixU(); // Store the upper triangular factor
@@ -162,7 +166,7 @@ void MEBARS::_update() {
   // compute MLE
   std::vector<Eigen::VectorXd> xi_temp = xi;
   xi_temp[dim] = xi_new;
-  MLERegression mle_new = mle_regression(t, y, xi_temp, degrees, intercepts);
+  MLERegression mle_new = mle_regression(t, y, xi_temp, degrees, intercepts, tmin, tmax);
   Eigen::VectorXd beta_mle_new = mle_new.beta;
   double sigma_mle_new = mle_new.sigma;
   Eigen::MatrixXd U_chol_new = mle_new.llt.matrixU();
@@ -217,7 +221,7 @@ Eigen::MatrixXd MEBARS::predict(const Eigen::MatrixXd & x_new) {
   for(int i=0;i<xis.length();i++) {
     std::vector<Eigen::VectorXd> xi_sample = Rcpp::as<std::vector<Eigen::VectorXd>>(_xis[i]);
     Eigen::VectorXd beta_sample = Rcpp::as<Eigen::VectorXd>(betas[i]);
-    Eigen::MatrixXd B = tensor_spline(t_new, xi_sample, degrees, intercepts);
+    Eigen::MatrixXd B = tensor_spline(t_new, xi_sample, degrees, intercepts, tmin, tmax);
     Eigen::VectorXd y_pred = B * beta_sample;
     predictions.col(i) = y_pred;
   }
@@ -241,7 +245,7 @@ RCPP_MODULE(class_MEBARS) {
   using namespace Rcpp;
 
   class_<MEBARS>("MEBARS")
-    .constructor<Eigen::MatrixXd, Eigen::VectorXd, NumericVector, IntegerVector, List>(
+    .constructor<Eigen::MatrixXd, Eigen::VectorXd, Eigen::RowVectorXd, Eigen::RowVectorXd, NumericVector, IntegerVector, List>(
       "Construct MEBARS object for multivariate spline regression"
     )
     .method("rjmcmc", &MEBARS::rjmcmc, 

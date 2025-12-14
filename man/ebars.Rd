@@ -7,6 +7,8 @@
 ebars(
   x,
   y,
+  xmin = NULL,
+  xmax = NULL,
   gamma = 1,
   c = 0.3,
   times = 3,
@@ -20,6 +22,10 @@ ebars(
 \item{x}{a numeric vector, indicates the predictor values.}
 
 \item{y}{a numeric vector, indicates the response values, the same length as x.}
+
+\item{xmin}{double, the minimum value of predictor, default is \code{min(x)}.}
+
+\item{xmax}{double, the maximum value of predictor, default is \code{max(x)}.}
 
 \item{gamma}{double, the exponent in extended BIC, default value is \code{1.0}.
 It should be greater than 0.}
@@ -45,8 +51,8 @@ An S4 object of class EBARS with the following methods:
 \describe{
 \item{\code{rjmcmc(burns, steps)}}{Run reversible jump MCMC algorithm.
 \itemize{
-\item \code{burns}: Number of burn-in iterations
-\item \code{steps}: Number of posterior sampling iterations
+\item \code{burns}: Number of burn-in iterations, standard value is \code{5000}.
+\item \code{steps}: Number of posterior sampling iterations, standard value is \code{5000}.
 }}
 \item{\code{predict(x_new)}}{Predict response values for new data.
 \itemize{
@@ -85,8 +91,8 @@ y = B\%*\%beta
 y_h = y + rnorm(m,0,0.05)
 
 # run EBARS
-a = ebars(x,y_h,c=0.3,times = 2)
-a$rjmcmc(burns=2000,steps=2000)
+a = ebars(x,y_h,times = 2)
+a$rjmcmc(burns=1000,steps=1000)
 
 # generate test data set
 m_new = 50

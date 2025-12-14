@@ -24,11 +24,9 @@ Rcpp::sourceCpp(code='
 #include <algorithm>
 using namespace std;
 
-// [[Rcpp::export(testcpp)]]
-void testcpp() {
-  int n = 10;
-  Rcpp::IntegerVector v = Rcpp::sample(n, 10);
-  Rcpp::Rcout << v << std::endl;
+// [[Rcpp::export]]
+void testcpp(const Eigen::RowVectorXd & x) {
+  std::cout << x << std::endl;
 }
 ')
 ```
@@ -121,7 +119,7 @@ beta = matrix(rnorm(40,0,1),ncol=1)
 fss <- function(x,y){
   xix = c(0.2,0.5)
   xiy = c(0.4,0.4,0.4,0.4,0.7)
-  B = tensor_spline(cbind(x,y),list(xix,xiy), c(3, 3), c(FALSE, FALSE))
+  B = tensor_spline(cbind(x,y),list(xix,xiy), c(3, 3), c(FALSE, FALSE), c(0,0), c(1,1))
   return(B%*%beta)
 }
 ```

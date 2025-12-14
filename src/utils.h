@@ -22,7 +22,8 @@ struct MLERegression {
 // estimate beta and sigma in the univariate spline regression by least square estimation
 MLERegression mle_regression(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
                              const Eigen::VectorXd & xi,
-                             int degree = 3, bool intercept = false);
+                             int degree = 3, bool intercept = false,
+                             double xmin = 0.0, double xmax = 1.0);
 
 /*
 Rcpp::List spline_regression(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
@@ -39,7 +40,7 @@ Eigen::VectorXd spline_predict(const Eigen::VectorXd & x_new, const Eigen::Vecto
 
 // generate a univariate B-spline basis matrix
 Eigen::MatrixXd spline(const Eigen::VectorXd & x, const Eigen::VectorXd & xi,
-                       int degree = 3, bool intercept = false);
+                       int degree = 3, bool intercept = false, double xmin = 0.0, double xmax = 1.0);
 
 
 
@@ -103,13 +104,17 @@ MLERegression mle_regression(const Eigen::MatrixXd & x,
                              const Eigen::VectorXd & y,
                              const std::vector<Eigen::VectorXd> & xis,
                              const std::vector<int> & degrees,
-                             const Rcpp::LogicalVector & intercepts);
+                             const Rcpp::LogicalVector & intercepts,
+                             const Eigen::RowVectorXd & xmin,
+                             const Eigen::RowVectorXd & xmax);
 
 // General tensor spline for arbitrary dimensions
 Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,
                               const std::vector<Eigen::VectorXd> & xis,
                               std::vector<int> degrees,
-                              Rcpp::LogicalVector intercepts);
+                              Rcpp::LogicalVector intercepts,
+                              const Eigen::RowVectorXd & xmin,
+                              const Eigen::RowVectorXd & xmax);
 
 
 /*
