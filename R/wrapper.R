@@ -150,7 +150,7 @@ ebars <- function(x, y, xmin = NULL, xmax = NULL, gamma = 1.0, c = 0.3, times = 
 #' fss <- function(x,y){
 #'   xix = c(0.2,0.3)
 #'   xiy = c(0.5,0.5,0.5,0.5,0.7)
-#'   B = tensor_spline(cbind(x,y),list(xix,xiy), c(3,3), c(FALSE,FALSE))
+#'   B = tensor_spline(cbind(x,y),list(xix,xiy), c(3,3), c(FALSE,FALSE), c(0,0), c(1,1))
 #'   return(B%*%beta)
 #' }
 #' # parameters' configuration
