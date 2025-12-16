@@ -34,12 +34,13 @@ void MEBARS::_knots() {
 }
 
 MEBARS::MEBARS(const Eigen::MatrixXd & _x, const Eigen::VectorXd & _y,
-               const Eigen::RowVectorXd & _xmin, const Eigen::RowVectorXd & _xmax,
+               const Eigen::RowVectorXd & _xmin, const Eigen::RowVectorXd & _xmax, int _mpart, double _eps,
                Rcpp::NumericVector _para, Rcpp::IntegerVector _num, Rcpp::List _spline) {
   x = _x; y = _y;
   gamma = _para(0); c = _para(1);
   m = _y.size(); d = x.cols();
-
+  mpart = _mpart;
+  eps = _eps;
   // compute the number of knots
   ks = std::vector<int>(d);
   fix_ks = Rcpp::LogicalVector(d);
@@ -68,18 +69,24 @@ MEBARS::MEBARS(const Eigen::MatrixXd & _x, const Eigen::VectorXd & _y,
   _knots();
   _initial();
   // maximum likelihood estimation
-  MLERegression mle = mle_regression(t, y, xi, degrees, intercepts, tmin, tmax);
+  MLERegression mle = mle_regression(t, y, xi, degrees, intercepts, tmin, tmax, mpart, eps);
   beta_mle = mle.beta;
+  beta_reduced_mle = mle.beta_reduced;
+  valid_cols = mle.valid_cols;
   sigma_mle = mle.sigma;
   U_chol = mle.llt.matrixU(); // Store the upper triangular factor
   nv = beta_mle.size();
   // sample beta from posterior
   double shrink_factor = m / (m + 1.0);
-  Eigen::VectorXd beta_mean = shrink_factor * beta_mle;
-  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(beta_mle.size()));
-  beta = beta_mean + std::sqrt(shrink_factor) * sigma_mle * U_chol.triangularView<Eigen::Upper>().solve(z);
+  Eigen::VectorXd beta_mean = shrink_factor * beta_reduced_mle;
+  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(beta_reduced_mle.size()));
+  Eigen::VectorXd beta_reduced = beta_mean + std::sqrt(shrink_factor) * sigma_mle * U_chol.triangularView<Eigen::Upper>().solve(z);
+  // expand beta_reduced to full beta
+  beta = Eigen::VectorXd::Zero(nv);
+  for(int i=0;i<valid_cols.size();i++) {
+    beta(valid_cols[i]) = beta_reduced(i);
+  }
   
-
   xis = Rcpp::List::create();
   betas = Rcpp::List::create();
   sigmas = Rcpp::List::create();
@@ -166,8 +173,10 @@ void MEBARS::_update() {
   // compute MLE
   std::vector<Eigen::VectorXd> xi_temp = xi;
   xi_temp[dim] = xi_new;
-  MLERegression mle_new = mle_regression(t, y, xi_temp, degrees, intercepts, tmin, tmax);
+  MLERegression mle_new = mle_regression(t, y, xi_temp, degrees, intercepts, tmin, tmax, mpart, eps);
   Eigen::VectorXd beta_mle_new = mle_new.beta;
+  Eigen::VectorXd beta_reduced_mle_new = mle_new.beta_reduced;
+  std::vector<Eigen::Index> valid_cols_new = mle_new.valid_cols;
   double sigma_mle_new = mle_new.sigma;
   Eigen::MatrixXd U_chol_new = mle_new.llt.matrixU();
   int nv_new = beta_mle_new.size();
@@ -183,13 +192,19 @@ void MEBARS::_update() {
   if(acc_criteria < acc_prob) {
     ks[dim] = k_new; xi[dim] = xi_new; remain_knots[dim] = remain_new;
     beta_mle = beta_mle_new; sigma_mle = sigma_mle_new; U_chol = U_chol_new; nv = nv_new;
+    beta_reduced_mle = beta_reduced_mle_new; valid_cols = valid_cols_new;
   }
 
   // sample beta from posterior
   double shrink_factor = m / (m + 1.0);
-  Eigen::VectorXd beta_mean = shrink_factor * beta_mle;
-  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(beta_mle.size()));
-  beta = beta_mean + std::sqrt(shrink_factor) * sigma_mle * U_chol.triangularView<Eigen::Upper>().solve(z);
+  Eigen::VectorXd beta_mean = shrink_factor * beta_reduced_mle;
+  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(beta_reduced_mle.size()));
+  Eigen::VectorXd beta_reduced = beta_mean + std::sqrt(shrink_factor) * sigma_mle * U_chol.triangularView<Eigen::Upper>().solve(z);
+  // expand beta_reduced to full beta
+  beta = Eigen::VectorXd::Zero(nv);
+  for(int i=0;i<valid_cols.size();i++) {
+    beta(valid_cols[i]) = beta_reduced(i);
+  }
 }
 
 
@@ -245,7 +260,7 @@ RCPP_MODULE(class_MEBARS) {
   using namespace Rcpp;
 
   class_<MEBARS>("MEBARS")
-    .constructor<Eigen::MatrixXd, Eigen::VectorXd, Eigen::RowVectorXd, Eigen::RowVectorXd, NumericVector, IntegerVector, List>(
+    .constructor<Eigen::MatrixXd, Eigen::VectorXd, Eigen::RowVectorXd, Eigen::RowVectorXd, int, double, NumericVector, IntegerVector, List>(
       "Construct MEBARS object for multivariate spline regression"
     )
     .method("rjmcmc", &MEBARS::rjmcmc, 

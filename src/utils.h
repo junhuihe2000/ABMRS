@@ -10,9 +10,12 @@ struct MLERegression {
   Eigen::VectorXd beta;
   double sigma;
   Eigen::LLT<Eigen::MatrixXd> llt;
+  Eigen::VectorXd beta_reduced;
+  std::vector<Eigen::Index> valid_cols;
   
-  MLERegression(const Eigen::VectorXd& b, double s, const Eigen::LLT<Eigen::MatrixXd>& l)
-    : beta(b), sigma(s), llt(l) {}
+  MLERegression(const Eigen::VectorXd& b, double s, const Eigen::LLT<Eigen::MatrixXd>& l,
+                const Eigen::VectorXd& b_red, const std::vector<Eigen::Index>& vc)
+    : beta(b), sigma(s), llt(l), beta_reduced(b_red), valid_cols(vc) {}
 };
 
 
@@ -23,7 +26,8 @@ struct MLERegression {
 MLERegression mle_regression(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
                              const Eigen::VectorXd & xi,
                              int degree = 3, bool intercept = false,
-                             double xmin = 0.0, double xmax = 1.0);
+                             double xmin = 0.0, double xmax = 1.0,
+                             int mpart = 0, double eps = 1e-8);
 
 /*
 Rcpp::List spline_regression(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
@@ -106,7 +110,8 @@ MLERegression mle_regression(const Eigen::MatrixXd & x,
                              const std::vector<int> & degrees,
                              const Rcpp::LogicalVector & intercepts,
                              const Eigen::RowVectorXd & xmin,
-                             const Eigen::RowVectorXd & xmax);
+                             const Eigen::RowVectorXd & xmax,
+                             int mpart = 0, double eps = 1e-8);
 
 // General tensor spline for arbitrary dimensions
 Eigen::MatrixXd tensor_spline(const Eigen::MatrixXd & x,

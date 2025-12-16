@@ -23,7 +23,10 @@
 #' @param degree int, the degree of polynomial spline, default value is `3`.
 #' @param intercept bool, whether the intercept is included in the basis,
 #' default value is `TRUE`.
-#' @returns An S4 object of class EBARS with the following methods:
+#' @param npart int, minimum number of non-zero points in a basis function. 
+#' Defaults to `20` or `0.1 * length(x)`, whichever is smaller.
+#' @param eps double, a small constant to define "non-zero", default value is `1e-8`.
+#' @returns An R6 object of class EBARS with the following methods:
 #' \describe{
 #'   \item{\code{rjmcmc(burns, steps)}}{Run reversible jump MCMC algorithm.
 #'     \itemize{
@@ -75,15 +78,18 @@
 #' y_hat = rowMeans(pred)
 #'
 ebars <- function(x, y, xmin = NULL, xmax = NULL, gamma = 1.0, c = 0.3, times = 3,
-                  k = -1, n = -1, degree = 3, intercept = TRUE) {
+                  k = -1, n = -1, degree = 3, intercept = TRUE, npart = NULL, eps = 1e-8) {
   if (is.null(xmin)) {
     xmin <- min(x)
   }
   if (is.null(xmax)) {
     xmax <- max(x)
   }
+  if (is.null(npart)) {
+    npart <- min(20, floor(0.1 * length(x)))
+  }
   
-  obj <- EBARS$new(x, y, xmin, xmax, c(gamma, c, times), c(k, n), 
+  obj <- EBARS$new(x, y, xmin, xmax,  npart, eps, c(gamma, c, times), c(k, n), 
                    list("degree" = degree, "intercept" = intercept))
   
   return(obj)
@@ -115,7 +121,10 @@ ebars <- function(x, y, xmin = NULL, xmax = NULL, gamma = 1.0, c = 0.3, times = 
 #' @param degrees an integer vector with the length `ncol(x)`, the degree of polynomial spline, default value is `c(3, 3, ...)`.
 #' @param intercepts a logical vector with the length `ncol(x)`, whether the intercept is included in the basis,
 #' default value is `c(TRUE, TRUE, ...)`.
-#' @returns An S4 object of class MEBARS with the following methods:
+#' @param npart int, minimum number of non-zero points in a basis function. 
+#' Defaults to `20` or `0.1 * nrow(x)`, whichever is smaller.
+#' @param eps double, a small constant to define "non-zero", default value is `1e-8`.
+#' @returns An R6 object of class MEBARS with the following methods:
 #' \describe{
 #'   \item{\code{rjmcmc(burns, steps)}}{Run reversible jump MCMC algorithm.
 #'     \itemize{
@@ -176,7 +185,7 @@ ebars <- function(x, y, xmin = NULL, xmax = NULL, gamma = 1.0, c = 0.3, times = 
 #' mean((y_new-y_hat)^2)
 #'
 mebars <- function(x, y, xmin = NULL, xmax = NULL, gamma = 1.0, c = 0.3, times = NULL,
-                   ks = NULL, ns = NULL, degrees = NULL, intercepts = NULL) {
+                   ks = NULL, ns = NULL, degrees = NULL, intercepts = NULL, npart = NULL, eps = 1e-8) {
   d <- ncol(x)
   if (is.null(xmin)) {
     xmin <- apply(x, 2, min)
@@ -199,9 +208,12 @@ mebars <- function(x, y, xmin = NULL, xmax = NULL, gamma = 1.0, c = 0.3, times =
   if (is.null(intercepts)) {
     intercepts <- rep(TRUE, d)
   }
+  if (is.null(npart)) {
+    npart <- min(20, floor(0.1 * nrow(x)))
+  }
 
 
-  obj <- MEBARS$new(x, y, xmin, xmax, c(gamma, c, times), c(ks, ns), 
+  obj <- MEBARS$new(x, y, xmin, xmax, npart, eps, c(gamma, c, times), c(ks, ns), 
                    list("degrees" = degrees, "intercepts" = intercepts))
   
   return(obj)

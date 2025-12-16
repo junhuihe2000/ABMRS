@@ -10,15 +10,46 @@
 // MLE of univariate spline regression coefficients
 MLERegression mle_regression(const Eigen::VectorXd & x, const Eigen::VectorXd & y,
                              const Eigen::VectorXd & xi, int degree, bool intercept,
-                             double xmin, double xmax) {
+                             double xmin, double xmax, int mpart, double eps) {
   // generate B-spline design matrix
-  Eigen::MatrixXd B = spline(x, xi, degree, intercept, xmin, xmax);
-  double m = B.rows();
-  // compute MLE
+  Eigen::MatrixXd B_full = spline(x, xi, degree, intercept, xmin, xmax);
+  double m = B_full.rows();
+  const Eigen::Index n_cols = B_full.cols();
+
+  // Find columns with non-zero count > mpart
+  std::vector<Eigen::Index> valid_cols;
+  if (mpart > 0) {
+    for (Eigen::Index j = 0; j < n_cols; ++j) {
+      const Eigen::Index nnz = (B_full.col(j).array().abs() > eps).count();
+      if (nnz > mpart) {
+        valid_cols.push_back(j);
+      }
+    }
+  } else {
+    // If mpart <= 0, use all columns
+    for (Eigen::Index j = 0; j < n_cols; ++j) {
+      valid_cols.push_back(j);
+    }
+  }
+
+  // Extract valid columns into B
+  Eigen::MatrixXd B(B_full.rows(), valid_cols.size());
+  for (size_t i = 0; i < valid_cols.size(); ++i) {
+    B.col(i) = B_full.col(valid_cols[i]);
+  }
+
+  // Compute MLE on reduced basis
   Eigen::LLT<Eigen::MatrixXd> llt(B.transpose()*B + 1e-8*Eigen::MatrixXd::Identity(B.cols(), B.cols()));
-  Eigen::VectorXd beta = llt.solve(B.transpose()*y);
-  double sigma = (y-B*beta).norm() / std::sqrt(m);
-  return MLERegression(beta, sigma, llt);
+  Eigen::VectorXd beta_reduced = llt.solve(B.transpose()*y);
+
+  // Map reduced beta back to full size (zero for excluded columns)
+  Eigen::VectorXd beta = Eigen::VectorXd::Zero(n_cols);
+  for (size_t i = 0; i < valid_cols.size(); ++i) {
+    beta[valid_cols[i]] = beta_reduced[i];
+  }
+
+  double sigma = (y - B_full*beta).norm() / std::sqrt(m);
+  return MLERegression(beta, sigma, llt, beta_reduced, valid_cols);
 }
 
 /*
@@ -193,15 +224,47 @@ MLERegression mle_regression(const Eigen::MatrixXd & x,
                              const std::vector<int> & degrees,
                              const Rcpp::LogicalVector & intercepts,
                              const Eigen::RowVectorXd & xmin,
-                             const Eigen::RowVectorXd & xmax) {
+                             const Eigen::RowVectorXd & xmax,
+                             int mpart, double eps) {
   // generate B-spline design matrix
-  Eigen::MatrixXd B = tensor_spline(x, xis, degrees, intercepts, xmin, xmax);
-  double m = B.rows();
-  // compute MLE
+  Eigen::MatrixXd B_full = tensor_spline(x, xis, degrees, intercepts, xmin, xmax);
+  double m = B_full.rows();
+  const Eigen::Index n_cols = B_full.cols();
+
+  // Find columns with non-zero count > mpart
+  std::vector<Eigen::Index> valid_cols;
+  if (mpart > 0) {
+    for (Eigen::Index j = 0; j < n_cols; ++j) {
+      const Eigen::Index nnz = (B_full.col(j).array().abs() > eps).count();
+      if (nnz > mpart) {
+        valid_cols.push_back(j);
+      }
+    }
+  } else {
+    // If mpart <= 0, use all columns
+    for (Eigen::Index j = 0; j < n_cols; ++j) {
+      valid_cols.push_back(j);
+    }
+  }
+
+  // Extract valid columns into B
+  Eigen::MatrixXd B(B_full.rows(), valid_cols.size());
+  for (size_t i = 0; i < valid_cols.size(); ++i) {
+    B.col(i) = B_full.col(valid_cols[i]);
+  }
+
+  // Compute MLE on reduced basis
   Eigen::LLT<Eigen::MatrixXd> llt(B.transpose()*B + 1e-8*Eigen::MatrixXd::Identity(B.cols(), B.cols()));
-  Eigen::VectorXd beta = llt.solve(B.transpose()*y);
-  double sigma = (y-B*beta).norm() / std::sqrt(m);
-  return MLERegression(beta, sigma, llt);
+  Eigen::VectorXd beta_reduced = llt.solve(B.transpose()*y);
+
+  // Map reduced beta back to full size (zero for excluded columns)
+  Eigen::VectorXd beta = Eigen::VectorXd::Zero(n_cols);
+  for (size_t i = 0; i < valid_cols.size(); ++i) {
+    beta[valid_cols[i]] = beta_reduced[i];
+  }
+
+  double sigma = (y - B_full*beta).norm() / std::sqrt(m);
+  return MLERegression(beta, sigma, llt, beta_reduced, valid_cols);
 }
 
 

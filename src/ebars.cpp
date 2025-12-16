@@ -31,10 +31,11 @@ void EBARS::_knots() {
   }
 }
 
-EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y, double _xmin, double _xmax,
+EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y, double _xmin, double _xmax, int _mpart, double _eps,
              Rcpp::NumericVector _para, Rcpp::IntegerVector _num, Rcpp::List _spline) {
   x = _x; y = _y;
   gamma = _para(0); c = _para(1);
+  mpart = _mpart; eps = _eps;
   m = _y.size();
   double _times = _para(2);
   // compute the number of knots
@@ -58,17 +59,23 @@ EBARS::EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y, double _xmi
   _knots();
   _initial();
   // maximum likelihood estimation
-  MLERegression mle = mle_regression(t, y, xi, degree, intercept, tmin, tmax);
+  MLERegression mle = mle_regression(t, y, xi, degree, intercept, tmin, tmax, mpart, eps);
   beta_mle = mle.beta;
   sigma_mle = mle.sigma;
+  beta_reduced_mle = mle.beta_reduced;
+  valid_cols = mle.valid_cols;
   U_chol = mle.llt.matrixU(); // Store the upper triangular factor
   nv = beta_mle.size();
   // sample beta from posterior
   double shrink_factor = m / (m + 1.0);
-  Eigen::VectorXd beta_mean = shrink_factor * beta_mle;
-  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(beta_mle.size()));
-  beta = beta_mean + std::sqrt(shrink_factor) * sigma_mle * U_chol.triangularView<Eigen::Upper>().solve(z);
-  
+  Eigen::VectorXd beta_mean = shrink_factor * beta_reduced_mle;
+  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(beta_reduced_mle.size()));
+  Eigen::VectorXd beta_reduced = beta_mean + std::sqrt(shrink_factor) * sigma_mle * U_chol.triangularView<Eigen::Upper>().solve(z);
+  // expand beta_reduced to full beta
+  beta = Eigen::VectorXd::Zero(nv);
+  for(int i=0;i<valid_cols.size();i++) {
+    beta(valid_cols[i]) = beta_reduced(i);
+  }
 
   xis = Rcpp::List::create();
   betas = Rcpp::List::create();
@@ -141,10 +148,12 @@ void EBARS::_update() {
   }
 
   // compute MLE
-  MLERegression mle_new = mle_regression(t, y, xi_new, degree, intercept, tmin, tmax);
+  MLERegression mle_new = mle_regression(t, y, xi_new, degree, intercept, tmin, tmax, mpart, eps);
   Eigen::VectorXd beta_mle_new = mle_new.beta;
   double sigma_mle_new = mle_new.sigma;
   Eigen::MatrixXd U_chol_new = mle_new.llt.matrixU();
+  Eigen::VectorXd beta_reduced_mle_new = mle_new.beta_reduced;
+  std::vector<Eigen::Index> valid_cols_new = mle_new.valid_cols;
   int nv_new = beta_mle_new.size();
 
   // compute marginal likelihood ratio: m^((k-k')/2)*(RSS_k/RSS_k')^(m/2)
@@ -159,13 +168,20 @@ void EBARS::_update() {
   if(acc_criteria < acc_prob) {
     k = k_new; xi = xi_new; remain_knots = remain_new;
     beta_mle = beta_mle_new; sigma_mle = sigma_mle_new; U_chol = U_chol_new; nv = nv_new;
+    beta_reduced_mle = beta_reduced_mle_new; valid_cols = valid_cols_new;
   }
 
   // sample beta from posterior
   double shrink_factor = m / (m + 1.0);
-  Eigen::VectorXd beta_mean = shrink_factor * beta_mle;
-  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(beta_mle.size()));
-  beta = beta_mean + std::sqrt(shrink_factor) * sigma_mle * U_chol.triangularView<Eigen::Upper>().solve(z);
+  Eigen::VectorXd beta_mean = shrink_factor * beta_reduced_mle;
+  Eigen::VectorXd z = Rcpp::as<Eigen::VectorXd>(Rcpp::rnorm(beta_reduced_mle.size()));
+  Eigen::VectorXd beta_reduced = beta_mean + std::sqrt(shrink_factor) * sigma_mle * U_chol.triangularView<Eigen::Upper>().solve(z);
+
+  // expand beta_reduced to full beta
+  beta = Eigen::VectorXd::Zero(nv);
+  for(int i=0;i<valid_cols.size();i++) {
+    beta(valid_cols[i]) = beta_reduced(i);
+  }
 }
 
 
@@ -216,7 +232,7 @@ RCPP_MODULE(class_EBARS) {
   using namespace Rcpp;
 
   class_<EBARS>("EBARS")
-    .constructor<Eigen::VectorXd, Eigen::VectorXd, double, double, NumericVector, IntegerVector, List>(
+    .constructor<Eigen::VectorXd, Eigen::VectorXd, double, double, int, double, NumericVector, IntegerVector, List>(
       "Construct EBARS object for univariate spline regression"
     )
     .method("rjmcmc", &EBARS::rjmcmc, 

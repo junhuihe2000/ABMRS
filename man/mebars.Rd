@@ -15,7 +15,9 @@ mebars(
   ks = NULL,
   ns = NULL,
   degrees = NULL,
-  intercepts = NULL
+  intercepts = NULL,
+  npart = NULL,
+  eps = 1e-08
 )
 }
 \arguments{
@@ -47,9 +49,14 @@ be estimated in the algorithm, default value is \code{c(-1, -1, ...)}.}
 
 \item{intercepts}{a logical vector with the length \code{ncol(x)}, whether the intercept is included in the basis,
 default value is \code{c(TRUE, TRUE, ...)}.}
+
+\item{npart}{int, minimum number of non-zero points in a basis function.
+Defaults to \code{20} or \code{0.1 * nrow(x)}, whichever is smaller.}
+
+\item{eps}{double, a small constant to define "non-zero", default value is \code{1e-8}.}
 }
 \value{
-An S4 object of class MEBARS with the following methods:
+An R6 object of class MEBARS with the following methods:
 \describe{
 \item{\code{rjmcmc(burns, steps)}}{Run reversible jump MCMC algorithm.
 \itemize{

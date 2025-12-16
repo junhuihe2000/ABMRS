@@ -25,6 +25,8 @@ private:
   int m; // the number of training points
   int nv; // the dimension of spline space
   int degree; // the degree of polynomials
+  int mpart; // the minimum number of non-zero points in a basis function
+  double eps; // a small constant to define "non-zero"
   double gamma, c; // constants
   double xmin, xmax; // range of x
   double tmin, tmax; // range of t
@@ -45,6 +47,8 @@ private:
   Rcpp::List sigmas; // posterior samples of residual standard deviation
 
   Eigen::VectorXd beta_mle; // estimated beta by MLE
+  Eigen::VectorXd beta_reduced_mle; // estimated reduced beta by MLE
+  std::vector<Eigen::Index> valid_cols; // valid columns in the design matrix for reduced model
   double sigma_mle; // estimated residual standard deviation by MLE
   Eigen::MatrixXd U_chol; // Upper triangular Cholesky factor of the design matrix' cross-product BtB
   Eigen::VectorXd beta; // posterior regression coefficients by Bayesian inference
@@ -64,6 +68,7 @@ public:
   // initialize EBARS
   EBARS(const Eigen::VectorXd & _x, const Eigen::VectorXd & _y,
         double _xmin, double _xmax,
+        int _mpart, double _eps,
         Rcpp::NumericVector _para,
         Rcpp::IntegerVector _num,
         Rcpp::List _spline);

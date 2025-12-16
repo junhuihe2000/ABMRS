@@ -15,7 +15,9 @@ ebars(
   k = -1,
   n = -1,
   degree = 3,
-  intercept = TRUE
+  intercept = TRUE,
+  npart = NULL,
+  eps = 1e-08
 )
 }
 \arguments{
@@ -45,9 +47,14 @@ be estimated in the algorithm, default value is \code{-1}.}
 
 \item{intercept}{bool, whether the intercept is included in the basis,
 default value is \code{TRUE}.}
+
+\item{npart}{int, minimum number of non-zero points in a basis function.
+Defaults to \code{20} or \code{0.1 * length(x)}, whichever is smaller.}
+
+\item{eps}{double, a small constant to define "non-zero", default value is \code{1e-8}.}
 }
 \value{
-An S4 object of class EBARS with the following methods:
+An R6 object of class EBARS with the following methods:
 \describe{
 \item{\code{rjmcmc(burns, steps)}}{Run reversible jump MCMC algorithm.
 \itemize{
