@@ -30,7 +30,7 @@ ebars(
 \item{xmax}{double, the maximum value of predictor, default is \code{max(x)}.}
 
 \item{gamma}{double, the exponent in extended BIC, default value is \code{1.0}.
-It should be greater than 0.}
+It should be constrained to the range \verb{[0.5, 2.0]}.}
 
 \item{c}{double, the constant affects the proposal distribution in MCMC,
 default value is \code{0.3}. It has to be contained in \verb{[0,1]}.}

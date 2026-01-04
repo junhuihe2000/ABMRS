@@ -12,7 +12,7 @@
 #' @param xmin double, the minimum value of predictor, default is `min(x)`.
 #' @param xmax double, the maximum value of predictor, default is `max(x)`.
 #' @param gamma double, the exponent in extended BIC, default value is `1.0`.
-#' It should be greater than 0.
+#' It should be constrained to the range `[0.5, 2.0]`.
 #' @param c double, the constant affects the proposal distribution in MCMC,
 #' default value is `0.3`. It has to be contained in `[0,1]`.
 #' @param times double, decides the number of all potential knots if `n<0`.
@@ -110,7 +110,7 @@ ebars <- function(x, y, xmin = NULL, xmax = NULL, gamma = 1.0, c = 0.3, times = 
 #' @param xmax a double vector with the length `ncol(x)`, the maximum values of predictors,
 #' default is `apply(x, 2, max)`.
 #' @param gamma double, the exponent in extended BIC, default value is `1.0`.
-#' It should be greater than 0.
+#' It should be constrained to the range `[0.5, 2.0]`.
 #' @param c double, the constant affects the proposal distribution in MCMC,
 #' default value is `0.3`. It has to be contained in `[0,1]`.
 #' @param times a double vector with the length `ncol(x)`, decides the number of all potential knots if `ns<0`.
